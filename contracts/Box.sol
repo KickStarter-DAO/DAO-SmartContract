@@ -2,13 +2,26 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract Box is Ownable {
+
+contract Box {
     uint256 private value;
+    address immutable Owner;
 
     // Emitted when the stored value changes
     event ValueChanged(uint256 newValue);
+
+    constructor(){
+    Owner=msg.sender;
+    }
+
+    /**
+     * @dev Throws if called by any account other than the owner.
+     */
+    modifier onlyOwner() {
+        require(Owner ==msg.sender, "Ownable: caller is not the owner");
+        _;
+    }
 
     // Stores a new value in the contract
     function store(uint256 newValue) public onlyOwner {
