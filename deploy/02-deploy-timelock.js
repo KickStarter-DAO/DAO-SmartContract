@@ -7,20 +7,20 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   const { deployer } = await getNamedAccounts();
 
   args = [MIN_DELAY, [], []];
-  const timelock = await deploy("TimeLock", {
+  const timeLock = await deploy("TimeLock", {
     from: deployer,
     args: args,
     log: true,
     waitConfirmations: network.config.blockConfirmations || 1,
   });
-  log(`timelock deployed at ${timelock.address}`);
+  log(`timelock deployed at ${timeLock.address}`);
 
   if (
     !developmentChains.includes(network.name) &&
     process.env.ETHERSCAN_API_KEY
   ) {
-    await verify(timelock.address, args);
+    await verify(timeLock.address, args);
   }
 };
 
-module.exports.tags = ["all", "governanceToken"];
+module.exports.tags = ["all", "timeLock"];

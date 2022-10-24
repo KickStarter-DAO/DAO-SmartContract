@@ -4,37 +4,28 @@ const {
   VOTING_PERIOD,
   VOTING_DELAY,
   QUORUM_PERCENTAGE,
+  ADDRESS_ZERO,
 } = require("../helper-config");
 const { verify } = require("../utils/verify");
 
 module.exports = async ({ getNamedAccounts, deployments }) => {
   const { deploy, log } = deployments;
   const { deployer } = await getNamedAccounts();
-  const governanceToken = await ethers.getContract("GovernanceToken", deployer);
+  const governor = await ethers.getContract("GovernerContract", deployer);
   const timelock = await ethers.getContract("TimeLock", deployer);
 
   console.log("Setting up roles...");
-  args = [
-    governanceToken.address,
-    timelock.address,
-    VOTING_DELAY,
-    VOTING_PERIOD,
-    QUORUM_PERCENTAGE,
-  ];
-  const governorContract = await deploy("GovernerContract", {
-    from: deployer,
-    args: args,
-    log: true,
-    waitConfirmations: network.config.blockConfirmations || 1,
-  });
-  log(`governorContract deployed at ${governorContract.address}`);
 
-  if (
-    !developmentChains.includes(network.name) &&
-    process.env.ETHERSCAN_API_KEY
-  ) {
-    await verify(governorContract.address, args);
-  }
+  const proposerRole = await timelock.PROPOSER_ROLE();
+  const executorRole = await timelock.EXECUTOR_ROLE();
+  const adminRole = await timelock.TIMELOCK_ADMIN_ROLE();
+
+  const proposerTx = await timelock.grantRole(proposerRole, governor.address);
+  await proposerTx.wait(1);
+  const executorTx = await timelock.grantRole(executorRole, ADDRESS_ZERO);
+  await executorTx.wait(1);
+  const revokeTx = await timelock.revokeRole(adminRole, deployer);
+  await revokeTx.wait(1);
 };
 
-module.exports.tags = ["all", "governorContract"];
+module.exports.tags = ["all", "setupGovernanceContract"];
