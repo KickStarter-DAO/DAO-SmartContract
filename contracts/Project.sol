@@ -1,8 +1,12 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.9;
 contract Project{
+
+    // DAO owner /              //if need add more than one DAO Owner
     address DAO_OWNER;
-    uint64 Project_Submition_Fee;
+
+    // at the time of project registraation owner must pay
+    uint96 Project_Submition_Fee;
     constructor(uint64 Fee){
         DAO_OWNER=msg.sender;
         Project_Submition_Fee=Fee;
@@ -25,8 +29,6 @@ contract Project{
         string Country;
     }
 
-    mapping (address=>bool) public Registraton_Status;
-
 
     struct Project_Status{
         bool Project_review;
@@ -35,19 +37,29 @@ contract Project{
         uint16 No_of_votes;
         investorFund[] Fund_History;
         bool Rejected;
-
     }
+
     struct investorFund{
         address investor;
         uint16 Funding;
     }
 
+// store (key, value)=(projectOwner,registration successful or not)
+    mapping (address=>bool) public Owner_Registraton_Status;
 
-
-    // Project_Details[] List_Of_projects;
+// store (key, value)=(projectOwner,project Details)
     mapping (address=>Project_Owner_Details) public ProjectOwnerDetails;
+
+// store (key,UniqueId, value)=(projectOwner, UniqueId,Project_status)
+//uniqueId is given by DAO at time of project registration
+// each project has a specific uniqueId 
     mapping(address=>mapping(uint256=>Project_Status)) public ProjectStatus;
+
+// store (key,UniqueId, value)=(projectOwner, UniqueId,Project_Details)
     mapping (address =>mapping(uint=>Project_Details)) public  ProjectDetails;
+
+// store (key,value)=(projectOwner, ProjectSubmissionFee by owner)
+// project Owner must pay minimum project submission fee (like intial stake)
     mapping(address=>mapping (uint256=>uint)) public ProjectSubmissionFee;
 
     function RegisterOwner(
@@ -55,10 +67,10 @@ contract Project{
         string memory Email,
         string memory Country
         ) public {
-            require(!Registraton_Status[msg.sender],"Your registration has already done");
+            require(!Owner_Registraton_Status[msg.sender],"Your registration has already done");
 
             ProjectOwnerDetails[msg.sender]=Project_Owner_Details(Owner,Email,Country);
-            Registraton_Status[msg.sender]=true;
+            Owner_Registraton_Status[msg.sender]=true;
             emit LogRegistrationOwner(msg.sender, true);
         }
 
@@ -68,7 +80,7 @@ contract Project{
         string memory ProjectWebsite,
         string memory ProjectDescription) public payable  {
     require(msg.value>=Project_Submition_Fee,"you must pay submission fee.");
-    require(Registraton_Status[msg.sender],"Your ownership registration has not done.");
+    require(Owner_Registraton_Status[msg.sender],"Your ownership registration has not done.");
     require(!ProjectDetails[msg.sender][UniqueId].ProjectRegistration,"Project is already registered.");
     ProjectDetails[msg.sender][UniqueId]=Project_Details(true,ProjectName,ProjectWebsite,ProjectDescription);
     ProjectSubmissionFee[msg.sender][UniqueId]=msg.value;
