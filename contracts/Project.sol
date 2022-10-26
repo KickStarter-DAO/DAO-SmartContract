@@ -1,7 +1,12 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.9;
 contract Project{
+
+
+    event LogRegistrationOwner( address indexed Owner, bool RegistrationStatus);
+    event LogRegistrationProject(uint256 UniqueId,bool RegistrationStatus);
     struct Project_Details{
+        bool ProjectRegistration;
         string ProjectName;
         string ProjectWebsite;
         string ProjectDescription;
@@ -11,28 +16,56 @@ contract Project{
         string Owner;
         string Email;
         string Country;
-        bool RegistrationStatus;
 
     }
 
-    struct Status{
-        bool OwnerRegistrationStatus;
-        bool ProjectRegistrationStatus;
+    mapping (address=>bool) public Registraton_Status;
+
+
+    struct Project_Status{
+        bool Project_review;
+        uint16 Funding;
+        uint16 Funded;
+        bool Rejected;
     }
 
+
+
+
+    // Project_Details[] List_Of_projects;
     mapping (address=>Project_Owner_Details) public ProjectOwnerDetails;
-    mapping(address=>Status) public TrackStatus;
+    mapping(address=>mapping(uint256=>Project_Status)) public ProjectStatus;
     mapping (address =>mapping(uint=>Project_Details)) public  ProjectDetails;
 
-    function RegisterOwner(string memory Owner,
+    function RegisterOwner(
+        string memory Owner,
         string memory Email,
         string memory Country
         ) public {
-            require(!TrackStatus[msg.sender].OwnerRegistrationStatus,"Your registration has already done");
+            require(!Registraton_Status[msg.sender],"Your registration has already done");
 
             ProjectOwnerDetails[msg.sender]=Project_Owner_Details(Owner,Email,Country);
-            TrackStatus[msg.sender]=Status(true, false);
-                }
+            Registraton_Status[msg.sender]=true;
+            emit LogRegistrationOwner(msg.sender, true);
+        }
+
+    function RegisterProject(
+        uint256 UniqueId,
+        string memory ProjectName,
+        string memory ProjectWebsite,
+        string memory ProjectDescription) public  {
+    require(Registraton_Status[msg.sender],"Your ownership registration has not done");
+    require(!ProjectDetails[msg.sender][UniqueId].ProjectRegistration,"Project is already registered");
+    ProjectDetails[msg.sender][UniqueId]=Project_Details(true,ProjectName,ProjectWebsite,ProjectDescription);
+    emit  LogRegistrationProject(UniqueId, true);
+    }
+    
+
+
+
+
+
+            
 
     
 
@@ -55,4 +88,4 @@ contract Project{
 
 // function register
 // 	132280 gas
-// transaction cost	115026 gas
+// transaction cost	115026 gas////95589 gas 
