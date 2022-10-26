@@ -62,6 +62,11 @@ contract Project{
 // project Owner must pay minimum project submission fee (like intial stake)
     mapping(address=>mapping (uint256=>uint)) public ProjectSubmissionFee;
 
+// store (key, value)=(UniqueId,Project_Owner_Address)
+// pupose:
+//          investor can find list of completly verified projects(by DAO) and invest these projects only
+    mapping(uint=>address) List_Of_Verified_project;
+
     function RegisterOwner(
         string memory Owner,
         string memory Email,
@@ -100,6 +105,7 @@ contract Project{
     function initializeFunding(address project_Owner,uint UniqueId) public  OnlyDAO returns(bool success){
         require(ProjectStatus[project_Owner][UniqueId].Project_review,"review this project first");
         ProjectStatus[project_Owner][UniqueId].Funding_Status=true;
+        List_Of_Verified_project[UniqueId]=project_Owner;
         return true;
     }
 
