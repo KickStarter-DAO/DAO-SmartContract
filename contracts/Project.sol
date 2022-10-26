@@ -32,7 +32,7 @@ contract Project{
 
     struct Project_Status{
         bool Project_review;
-        uint16 Funding;
+        bool Funding_Status;
         uint16 Funded;
         uint16 No_of_votes;
         investorFund[] Fund_History;
