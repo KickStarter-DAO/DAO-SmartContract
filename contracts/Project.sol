@@ -30,7 +30,7 @@ contract Project{
         ) public {
             require(!TrackStatus[msg.sender].OwnerRegistrationStatus,"Your registration has already done");
 
-            ProjectOwnerDetails[msg.sender]=Project_Owner_Details(Owner,Email,Country, true);
+            ProjectOwnerDetails[msg.sender]=Project_Owner_Details(Owner,Email,Country,);
             TrackStatus[msg.sender]=Status(true, false);
                 }
 
