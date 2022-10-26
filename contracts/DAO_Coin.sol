@@ -20,7 +20,7 @@ contract DAOKickStarter is ERC20 {
 
 
     modifier onlyOwner() {
-        require(Owner ==msg.sender, "Ownable: caller is not the owner");
+     require(Owner ==msg.sender, "Ownable: caller is not the owner");
         _;
     }
 
