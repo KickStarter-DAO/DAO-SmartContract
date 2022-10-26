@@ -92,8 +92,15 @@ contract Project{
         _;
     }
 
-    function ProjectVerification_BY_DAO(bool Project_review) public  OnlyDAO{
-        
+
+    function ProjectVerification_BY_DAO(address project_Owner,uint UniqueId) public  OnlyDAO returns(bool success){
+        ProjectStatus[project_Owner][UniqueId].Project_review=true;
+        return true;
+    }
+    function initializeFunding(address project_Owner,uint UniqueId) public  OnlyDAO returns(bool success){
+        require(ProjectStatus[project_Owner][UniqueId].Project_review,"review this project first");
+        ProjectStatus[project_Owner][UniqueId].Funding_Status=true;
+        return true;
     }
 
     

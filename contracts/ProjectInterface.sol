@@ -54,6 +54,18 @@ function RegisterProject(
         uint256 UniqueId,
         string memory ProjectName,
         string memory ProjectWebsite,
-        string memory ProjectDescription) external payable; 
+        string memory ProjectDescription) external payable;
+
+
+    //  projects are review by DAO after verify KYC and project potential
+    function ProjectVerification_BY_DAO(
+        address project_Owner,
+        uint UniqueId) external  returns(bool success);
+
+// after review projects set funding_raising status true, so now investor can invest to this project
+    function initializeFunding(
+        address project_Owner,
+        uint UniqueId) external returns(bool success);
+
 
 }
