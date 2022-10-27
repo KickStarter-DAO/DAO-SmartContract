@@ -65,7 +65,7 @@ function RegisterProject(
 // after review projects set funding_raising status true, so now investor can invest to this project
     function initializeFunding(
         address project_Owner,
-        uint UniqueId) external returns(bool success);
+        uint UniqueId) external returns(bool success)
 
 
 }
