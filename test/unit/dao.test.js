@@ -312,6 +312,150 @@ const fs = require("fs");
           await executeTx.wait(1);
           const boxNewValue = await box.retrieve();
           console.log(`New Box Value: ${boxNewValue.toString()}`);
+          assert.equal(boxNewValue.toString(), "77");
+        });
+
+        it("Result of voting against", async () => {
+          let tx1 = await gtToken.transfer(
+            account1.address,
+            ethers.utils.parseEther("500000")
+          );
+          tx1 = await gtToken.transfer(
+            account2.address,
+            ethers.utils.parseEther("300000")
+          );
+          tx1 = await gtToken.transfer(
+            account3.address,
+            ethers.utils.parseEther("100000")
+          );
+
+          await tx1.wait(1);
+
+          gtToken = await ethers.getContract(
+            "GovernanceToken",
+            account1.address
+          );
+          tx1 = await gtToken.delegate(account1.address);
+          await tx1.wait(1);
+          gtToken = await ethers.getContract(
+            "GovernanceToken",
+            account2.address
+          );
+          tx1 = await gtToken.delegate(account2.address);
+          gtToken = await ethers.getContract(
+            "GovernanceToken",
+            account3.address
+          );
+          tx1 = await gtToken.delegate(account3.address);
+          await tx1.wait(1);
+
+          moveBlocks(1);
+
+          blockNumber = await ethers.provider.getBlockNumber();
+
+          const encodedFunctionCall = box.interface.encodeFunctionData(FUNC, [
+            NEW_VALUE,
+          ]);
+
+          const proposalTx = await governor.propose(
+            [box.address],
+            [0],
+            [encodedFunctionCall],
+            PROPOSAL_DESCRIPTION
+          );
+          const proposeReceipt = await proposalTx.wait(1);
+
+          const proposalId = proposeReceipt.events[0].args.proposalId;
+          let proposalState = await governor.state(proposalId);
+
+          const deadline = await governor.proposalDeadline(proposalId);
+
+          expect(proposalState == 1);
+
+          await moveBlocks(VOTING_DELAY + 1);
+          blockNumber = await ethers.provider.getBlockNumber();
+
+          // connect with account1
+          governor = await ethers.getContract(
+            "GovernerContract",
+            account1.address
+          );
+          // voting...
+          // 0 = Against, 1 = For, 2 = Abstain
+          let voteTxResponse = await governor.castVote(proposalId, 0);
+          await voteTxResponse.wait(1);
+
+          // voting with account 2 ************************************************
+
+          // connect with account2
+          const governor1 = await ethers.getContract(
+            "GovernerContract",
+            account2.address
+          );
+
+          const voteTxResponse1 = await governor1.castVote(proposalId, 0);
+          await voteTxResponse1.wait(1);
+
+          // account3 is voting ********************************************************** */
+          // connect with account1
+          governor = await ethers.getContract(
+            "GovernerContract",
+            account3.address
+          );
+          // voting...
+          // 0 = Against, 1 = For, 2 = Abstain
+          voteTxResponse = await governor.castVote(proposalId, 1);
+
+          // finish the voting
+          await moveBlocks(VOTING_PERIOD + 1);
+
+          proposalState = await governor.state(proposalId);
+          console.log(`Current Proposal State: ${proposalState}`);
+
+          // getting to results
+          const { againstVotes, forVotes, abstainVotes } =
+            await governor.proposalVotes(proposalId);
+          console.log(
+            `Vote on against: ${ethers.utils.formatEther(againstVotes)}`
+          );
+          console.log(`Vote on for: ${ethers.utils.formatEther(forVotes)}`);
+          console.log(
+            `Vote on abstain: ${ethers.utils.formatEther(abstainVotes)}`
+          );
+
+          assert.equal(proposalState.toString(), "3");
+
+          // its time to queue & execute
+
+          const descriptionHash = ethers.utils.keccak256(
+            ethers.utils.toUtf8Bytes(PROPOSAL_DESCRIPTION)
+          );
+          governor = await ethers.getContract("GovernerContract");
+          console.log("Queueing...");
+
+          await expect(
+            governor.queue(
+              [box.address],
+              [0],
+              [encodedFunctionCall],
+              descriptionHash
+            )
+          ).to.be.revertedWith("Governor: proposal not successful");
+
+          await moveTime(MIN_DELAY + 1);
+          await moveBlocks(1);
+
+          await expect(
+            governor.execute(
+              [box.address],
+              [0],
+              [encodedFunctionCall],
+              descriptionHash
+            )
+          ).to.be.revertedWith("Governor: proposal not successful");
+
+          const boxNewValue = await box.retrieve();
+          assert.equal(boxNewValue.toString(), "0");
         });
       });
     });
