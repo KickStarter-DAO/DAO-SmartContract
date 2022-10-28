@@ -10,11 +10,11 @@ const networkConfig = {
 };
 
 const developmentChains = ["hardhat", "localhost"];
-const INITIAL_SUPPLY = (10e18).toString();
-const MIN_DELAY = 3600;
-const VOTING_PERIOD = 5;
-const VOTING_DELAY = 1;
-const QUORUM_PERCENTAGE = 4;
+const INITIAL_SUPPLY = "1000000000000000000000000";
+const MIN_DELAY = 0;
+const VOTING_DELAY = 0;
+const VOTING_PERIOD = 200;
+const QUORUM_PERCENTAGE = 0;
 const ADDRESS_ZERO = "0x0000000000000000000000000000000000000000";
 const NEW_VALUE = 77;
 const FUNC = "store";

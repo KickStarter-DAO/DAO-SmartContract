@@ -12,8 +12,8 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     waitConfirmations: network.config.blockConfirmations || 1,
   });
   log(`governanceToken deployed at ${governanceToken.address}`);
-  await delegate(governanceToken.address, deployer);
-  console.log(`Delegated!`);
+  /* await delegate(governanceToken.address, deployer);
+   console.log(`Delegated!`); */
 
   if (
     !developmentChains.includes(network.name) &&
@@ -23,7 +23,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   }
 };
 
-const delegate = async (governanceTokenAddress, delegatedAccount) => {
+/* const delegate = async (governanceTokenAddress, delegatedAccount) => {
   const governanceToken = await ethers.getContractAt(
     "GovernanceToken",
     governanceTokenAddress
@@ -33,6 +33,6 @@ const delegate = async (governanceTokenAddress, delegatedAccount) => {
   console.log(
     `Checkpoint ${await governanceToken.numCheckpoints(delegatedAccount)}`
   );
-};
+}; */
 
 module.exports.tags = ["all", "governanceToken"];
