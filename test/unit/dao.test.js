@@ -11,6 +11,7 @@ const {
   proposalsFile,
   VOTING_PERIOD,
   MIN_DELAY,
+  INITIAL_SUPPLY,
 } = require("../../helper-config");
 const { moveBlocks } = require("../../utils/move-blocks");
 const { moveTime } = require("../../utils/move-time");
@@ -456,6 +457,97 @@ const fs = require("fs");
 
           const boxNewValue = await box.retrieve();
           assert.equal(boxNewValue.toString(), "0");
+        });
+      });
+      //******************************************************************************** */
+      //Checking erc20 tokens ******************************** */
+
+      describe("constructor", async () => {
+        it("Check the initial supply", async () => {
+          const iintial_supply = (await gtToken.totalSupply()).toString();
+          //console.log(ethers.utils.formatEther(iintial_supply));
+          assert.equal(INITIAL_SUPPLY, iintial_supply);
+        });
+        it("Name is correct", async () => {
+          const tokenName = (await gtToken.name()).toString();
+          assert.equal(tokenName, "GovernanceToken");
+        });
+        it("Symbol is correct", async () => {
+          const tokenSymbol = (await gtToken.symbol()).toString();
+          assert.equal(tokenSymbol, "GT");
+        });
+      });
+      describe("tranfers", async () => {
+        it("allow transfer to another address", async () => {
+          const tokenToSend = ethers.utils.parseEther("10");
+          //console.log(account1.address);
+          const tx = await gtToken.transfer(account1.address, tokenToSend);
+          assert(tx);
+          expect(await gtToken.balanceOf(account1.address)).to.equal(
+            tokenToSend
+          );
+        });
+        it("emits an transfer event, when an transfer occurs", async () => {
+          const tokenToSend = ethers.utils.parseEther("10");
+          const tx = await gtToken.transfer(account1.address, tokenToSend);
+          expect(tx).to.emit(gtToken, "Transfer");
+        });
+
+        describe("allowances", () => {
+          beforeEach(async () => {
+            userContract = await ethers.getContract(
+              "GovernanceToken",
+              account1.address
+            );
+          });
+          it("Should approve other address to spend token", async () => {
+            const tokenToSend = ethers.utils.parseEther("10");
+            await gtToken.approve(account1.address, tokenToSend);
+            const erc20_1 = await ethers.getContract(
+              "GovernanceToken",
+              account1.address
+            );
+            await erc20_1.transferFrom(deployer, account1.address, tokenToSend);
+            expect(await erc20_1.balanceOf(account1.address)).to.equal(
+              tokenToSend
+            );
+          });
+          it("doesn't allow an unnaproved member to do transfers", async () => {
+            const tokenToSend = ethers.utils.parseEther("10");
+            await expect(
+              userContract.transferFrom(deployer, account1.address, tokenToSend)
+            ).to.be.revertedWith("ERC20: insufficient allowance");
+          });
+          it("emits an approval event, when an approval occurs", async () => {
+            const tokenToSend = ethers.utils.parseEther("10");
+            const tx = await gtToken.approve(account1.address, tokenToSend);
+            expect(tx).to.emit(gtToken, "Approval");
+          });
+          it("won't allow a user to go over the allowance", async () => {
+            const tokenToSend = ethers.utils.parseEther("10");
+            const tokenToSendOver = ethers.utils.parseEther("20");
+            await gtToken.approve(account1.address, tokenToSend);
+            await expect(
+              userContract.transferFrom(
+                deployer,
+                account1.address,
+                tokenToSendOver
+              )
+            ).to.be.revertedWith("ERC20: insufficient allowance");
+          });
+          it("burn GT token", async () => {
+            const beforeBurn = await gtToken.balanceOf(deployer);
+            console.log(ethers.utils.formatEther(beforeBurn).toString());
+            const ethersToWei = ethers.utils.parseUnits("10", "ether");
+            const txBurn = await gtToken.burnToken(
+              deployer,
+              ethers.utils.parseEther("100000")
+            );
+            txBurn.wait(1);
+            const afterBurn = await gtToken.balanceOf(deployer);
+            console.log(ethers.utils.formatEther(afterBurn).toString());
+            assert.isAbove(beforeBurn, afterBurn);
+          });
         });
       });
     });
