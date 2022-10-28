@@ -10,8 +10,10 @@ const {
   VOTING_DELAY,
   proposalsFile,
   VOTING_PERIOD,
+  MIN_DELAY,
 } = require("../../helper-config");
 const { moveBlocks } = require("../../utils/move-blocks");
+const { moveTime } = require("../../utils/move-time");
 const fs = require("fs");
 
 !developmentChains.includes(network.name)
@@ -38,69 +40,6 @@ const fs = require("fs");
         box = await ethers.getContract("Box");
 
         gtToken = await ethers.getContract("GovernanceToken", deployer);
-
-        let tx1 = await gtToken.transfer(
-          account1.address,
-          ethers.utils.parseEther("500000")
-        );
-        tx1 = await gtToken.transfer(
-          account2.address,
-          ethers.utils.parseEther("300000")
-        );
-        tx1 = await gtToken.transfer(
-          account3.address,
-          ethers.utils.parseEther("100000")
-        );
-
-        await tx1.wait(1);
-
-        console.log(
-          `Account1 balance= ${ethers.utils
-            .formatEther(await gtToken.balanceOf(account1.address))
-            .toString()}`
-        );
-        console.log(
-          `Account2 balance= ${ethers.utils
-            .formatEther(await gtToken.balanceOf(account2.address))
-            .toString()}`
-        );
-
-        console.log(
-          `Account3 balance= ${ethers.utils
-            .formatEther(await gtToken.balanceOf(account3.address))
-            .toString()}`
-        );
-
-        gtToken = await ethers.getContract("GovernanceToken", account1.address);
-        tx1 = await gtToken.delegate(account1.address);
-        await tx1.wait(1);
-        gtToken = await ethers.getContract("GovernanceToken", account2.address);
-        tx1 = await gtToken.delegate(account2.address);
-        gtToken = await ethers.getContract("GovernanceToken", account3.address);
-        tx1 = await gtToken.delegate(account3.address);
-        await tx1.wait(1);
-
-        moveBlocks(1);
-
-        blockNumber = await ethers.provider.getBlockNumber();
-        console.log(
-          `account1 voting power : ${await governor.getVotes(
-            account1.address,
-            blockNumber - 1
-          )}`
-        );
-        console.log(
-          `account2 voting power : ${await governor.getVotes(
-            account2.address,
-            blockNumber - 1
-          )}`
-        );
-        console.log(
-          `account3 voting power : ${await governor.getVotes(
-            account3.address,
-            blockNumber - 1
-          )}`
-        );
       });
 
       it("was deployed", async () => {
@@ -112,7 +51,7 @@ const fs = require("fs");
 
       it("Only Owner can mint token", async () => {
         // console.log((await gtToken.balanceOf(deployer)).toString());
-        gtToken = await ethers.getContract("GovernanceToken", deployer);
+
         const tx = await gtToken.mintToken(
           deployer,
           ethers.BigNumber.from("1000000000000000000000000")
@@ -122,7 +61,7 @@ const fs = require("fs");
         // console.log((await gtToken.balanceOf(deployer)).toString());
 
         expect((await gtToken.balanceOf(deployer)).toString()).to.equal(
-          "1100000000000000000000000"
+          "2000000000000000000000000"
         );
         gtToken = await ethers.getContract("GovernanceToken", account1.address);
 
@@ -142,8 +81,80 @@ const fs = require("fs");
 
       //--------------------------------------------------------------------------------
 
-      describe("proposes, votes, waits, queues, and then executesxx", async () => {
+      describe("proposes, votes, waits, queues, and then executes & queue & execute", async () => {
         it("Create a purposal make a vote", async () => {
+          let tx1 = await gtToken.transfer(
+            account1.address,
+            ethers.utils.parseEther("500000")
+          );
+          tx1 = await gtToken.transfer(
+            account2.address,
+            ethers.utils.parseEther("300000")
+          );
+          tx1 = await gtToken.transfer(
+            account3.address,
+            ethers.utils.parseEther("100000")
+          );
+
+          await tx1.wait(1);
+
+          console.log(
+            `Account1 balance= ${ethers.utils
+              .formatEther(await gtToken.balanceOf(account1.address))
+              .toString()}`
+          );
+          console.log(
+            `Account2 balance= ${ethers.utils
+              .formatEther(await gtToken.balanceOf(account2.address))
+              .toString()}`
+          );
+
+          console.log(
+            `Account3 balance= ${ethers.utils
+              .formatEther(await gtToken.balanceOf(account3.address))
+              .toString()}`
+          );
+
+          gtToken = await ethers.getContract(
+            "GovernanceToken",
+            account1.address
+          );
+          tx1 = await gtToken.delegate(account1.address);
+          await tx1.wait(1);
+          gtToken = await ethers.getContract(
+            "GovernanceToken",
+            account2.address
+          );
+          tx1 = await gtToken.delegate(account2.address);
+          gtToken = await ethers.getContract(
+            "GovernanceToken",
+            account3.address
+          );
+          tx1 = await gtToken.delegate(account3.address);
+          await tx1.wait(1);
+
+          moveBlocks(1);
+
+          blockNumber = await ethers.provider.getBlockNumber();
+          console.log(
+            `account1 voting power : ${await governor.getVotes(
+              account1.address,
+              blockNumber - 1
+            )}`
+          );
+          console.log(
+            `account2 voting power : ${await governor.getVotes(
+              account2.address,
+              blockNumber - 1
+            )}`
+          );
+          console.log(
+            `account3 voting power : ${await governor.getVotes(
+              account3.address,
+              blockNumber - 1
+            )}`
+          );
+
           const encodedFunctionCall = box.interface.encodeFunctionData(FUNC, [
             NEW_VALUE,
           ]);
@@ -177,7 +188,10 @@ const fs = require("fs");
                 Executed
                 } */
           expect(proposalState == 1);
+
+          await moveBlocks(VOTING_DELAY + 1);
           blockNumber = await ethers.provider.getBlockNumber();
+
           console.log(
             `account1 voting power : ${await governor.getVotes(
               account1.address,
@@ -196,7 +210,7 @@ const fs = require("fs");
               blockNumber - 1
             )}`
           );
-          await moveBlocks(VOTING_DELAY + 1);
+
           console.log(
             `after voting delay Block number= ${await ethers.provider.getBlockNumber()}`
           );
@@ -269,6 +283,35 @@ const fs = require("fs");
           console.log(
             `Vote on abstain: ${ethers.utils.formatEther(abstainVotes)}`
           );
+
+          assert.equal(proposalState.toString(), "4");
+
+          // its time to queue & execute
+
+          const descriptionHash = ethers.utils.keccak256(
+            ethers.utils.toUtf8Bytes(PROPOSAL_DESCRIPTION)
+          );
+          governor = await ethers.getContract("GovernerContract");
+          console.log("Queueing...");
+          const queueTx = await governor.queue(
+            [box.address],
+            [0],
+            [encodedFunctionCall],
+            descriptionHash
+          );
+          await queueTx.wait(1);
+          await moveTime(MIN_DELAY + 1);
+          await moveBlocks(1);
+          console.log("Executing...");
+          const executeTx = await governor.execute(
+            [box.address],
+            [0],
+            [encodedFunctionCall],
+            descriptionHash
+          );
+          await executeTx.wait(1);
+          const boxNewValue = await box.retrieve();
+          console.log(`New Box Value: ${boxNewValue.toString()}`);
         });
       });
     });
