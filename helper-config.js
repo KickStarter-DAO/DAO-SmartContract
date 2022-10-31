@@ -20,6 +20,15 @@ const NEW_VALUE = 77;
 const FUNC = "store";
 const PROPOSAL_DESCRIPTION = "Propasol #1: Store 77 in the Box!";
 const proposalsFile = "./proposals.json";
+const s_projectID = 1;
+const s_projectName = "Sample Project";
+const s_website = "www.sampleProject.com";
+const s_description = "Amazing way to make money";
+const s_video =
+  "https://www.youtube.com/watch?v=5abamRO41fE&list=RD5abamRO41fE&start_radio=1&ab_channel=Slipknot";
+const s_fundRaisingGoalAmount = 10000;
+const s_roadMap = "Just click the video";
+const s_otherSources = "You dont need anything else";
 
 module.exports = {
   developmentChains,
@@ -34,4 +43,12 @@ module.exports = {
   FUNC,
   PROPOSAL_DESCRIPTION,
   proposalsFile,
+  s_projectID,
+  s_projectName,
+  s_website,
+  s_description,
+  s_video,
+  s_fundRaisingGoalAmount,
+  s_roadMap,
+  s_otherSources,
 };
