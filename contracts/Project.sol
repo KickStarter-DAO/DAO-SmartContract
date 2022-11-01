@@ -21,6 +21,7 @@ contract Project{
         string ProjectName;
         string ProjectWebsite;
         string ProjectDescription;
+        uint256 Funding_Goal;
     }
 
     struct Project_Owner_Details{
@@ -83,11 +84,12 @@ contract Project{
         uint256 UniqueId,
         string memory ProjectName,
         string memory ProjectWebsite,
-        string memory ProjectDescription) public payable  {
+        string memory ProjectDescription,
+        uint Funding_Goal) public payable  {
     require(msg.value>=Project_Submition_Fee,"you must pay submission fee.");
     require(Owner_Registraton_Status[msg.sender],"Your ownership registration has not done.");
     require(!ProjectDetails[msg.sender][UniqueId].ProjectRegistration,"Project is already registered.");
-    ProjectDetails[msg.sender][UniqueId]=Project_Details(true,ProjectName,ProjectWebsite,ProjectDescription);
+    ProjectDetails[msg.sender][UniqueId]=Project_Details(true,ProjectName,ProjectWebsite,ProjectDescription,Funding_Goal);
     ProjectSubmissionFee[msg.sender][UniqueId]=msg.value;
     emit LogRegistrationProject(UniqueId, true);
     }
