@@ -1,8 +1,9 @@
 //SPDX-License-Identifier: Unlicense
-pragma solidity 0.8.9;
+pragma solidity ^0.8.9;
 import "./project.sol";
+import "./ERC20.sol"
 
-contract Invest is Project {
+contract Invest is Project,ERC20 {
     
     //emit after successfull registration of Investor
     event LogRegistrationInvestor(address indexed, bool RegistrationStatus);
@@ -47,13 +48,16 @@ contract Invest is Project {
         project_Status.Funded+=msg.value;
         project_Status.Fund_History.push(investorFund(msg.sender,msg.value,timestamp));
         Investment[msg.sender][UniqueId]+=msg.value;
+
+        //approve token for this investor//
+        
         emit Loginvestment(msg.sender, UniqueId, timestamp);
         return true;
     }
 
     //for investor after funded in projects
     function getDAOToken(uint Uniqueid) public returns(bool){
-        
+        // transfer DAO token to investor equivalent to their funded//
     }
 
 
