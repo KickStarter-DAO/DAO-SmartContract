@@ -69,6 +69,7 @@ async function submit(
   console.log(projectMetaData);
   const ProjectMetadataUploadResponse = await storeProjectData(projectMetaData);
   console.log(`ipfs://${ProjectMetadataUploadResponse.IpfsHash}`);
+
   return ProjectMetadataUploadResponse.IpfsHash;
 }
 

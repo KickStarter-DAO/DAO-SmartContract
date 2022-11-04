@@ -18,6 +18,7 @@ async function propose(args, functionToCall, proposalDescription) {
     functionToCall,
     args
   );
+  console.log(encodedFunctionCall);
   console.log(`Proposing ${functionToCall} on ${box.address} with ${args}`);
   console.log(`Proposal description: \n ${proposalDescription}`);
 

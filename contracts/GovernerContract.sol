@@ -16,6 +16,16 @@ contract GovernerContract is
     GovernorVotesQuorumFraction,
     GovernorTimelockControl
 {
+    error GovernerContract__NotApporovedByDaoFoundation();
+
+    mapping(address => bool) public inWhiteList;
+
+    modifier isApporovedByDaoFoundation() {
+        if (!inWhiteList[msg.sender])
+            revert GovernerContract__NotApporovedByDaoFoundation();
+        _;
+    }
+
     constructor(
         IVotes _token,
         TimelockController _timelock,
