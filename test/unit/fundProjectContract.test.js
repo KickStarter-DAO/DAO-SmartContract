@@ -122,9 +122,11 @@ const fs = require("fs");
           );
 
           const proposalDescription =
-            "QmeqcGRJSAUJecnyHNUbxg53YPErLodFnvuNq92qAhVMUU";
+            "QmPwX1rNoYRmQAPDm8Dp7YSeFdxPKaczWaBu8NPgVpKufu";
           const encodedFunctionCall =
-            fundProjectContract.interface.encodeFunctionData(FUNC, [NEW_VALUE]);
+            fundProjectContract.interface.encodeFunctionData(FUNC_FUND, [
+              proposalDescription,
+            ]);
 
           const proposalTx = await governor.propose(
             [fundProjectContract.address],
@@ -225,7 +227,7 @@ const fs = require("fs");
           console.log(`account2 hasVoted: ${hasVoted2}`); */
 
           // account3 is voting ********************************************************** */
-          // connect with account1
+          // connect with account3
           governor = await ethers.getContract(
             "GovernerContract",
             account3.address
@@ -255,33 +257,37 @@ const fs = require("fs");
 
           // its time to queue & execute
 
-          const descriptionHash = ethers.utils.keccak256(args);
+          const descriptionHash = ethers.utils.keccak256(
+            ethers.utils.toUtf8Bytes(proposalDescription)
+          );
           governor = await ethers.getContract("GovernerContract");
           console.log("Queueing...");
-          console.log(encodedFunctionCall);
-          console.log(descriptionHash);
-          /* const queueTx = await governor.queue(
+
+          const queueTx = await governor.queue(
             [fundProjectContract.address],
             [0],
             [encodedFunctionCall],
             descriptionHash
           );
-          await queueTx.wait(1); */
+          await queueTx.wait(1);
           await moveTime(MIN_DELAY + 1);
           await moveBlocks(1);
           console.log("Executing...");
-          /* const executeTx = await governor.execute(
+          const executeTx = await governor.execute(
             [fundProjectContract.address],
             [0],
             [encodedFunctionCall],
             descriptionHash
           );
-          await executeTx.wait(1); */
-
-          /* const fundable = await fundProjectContract._isApporoveFundingByDao(
+          await executeTx.wait(1);
+          const projectId = await fundProjectContract._getProjectId(
             proposalDescription
           );
-          console.log(fundable); */
+          const fundable = await fundProjectContract._isApporoveFundingByDao(
+            projectId
+          );
+
+          assert(fundable);
         });
       });
     });

@@ -36,7 +36,6 @@ const projectDataTemplate = {
   fundRaisingGoalAmount: "",
   roadMap: "",
   otherSources: "",
-  projectID: "",
 };
 
 async function submitAndPropose(
@@ -81,22 +80,18 @@ async function submitAndPropose(
   const proposalDescription = ProjectMetadataUploadResponse.IpfsHash;
 
   const governor = await ethers.getContract("GovernerContract");
-  const fundProject = await ethers.getContract("FundProject");
+  const fundProjectContract = await ethers.getContract("FundProject");
 
-  console.log(proposalDescription);
-  const args = ethers.utils.keccak256(
-    ethers.utils.toUtf8Bytes(proposalDescription)
+  const args = "QmPwX1rNoYRmQAPDm8Dp7YSeFdxPKaczWaBu8NPgVpKufu";
+  const encodedFunctionCall = fundProjectContract.interface.encodeFunctionData(
+    FUNC_FUND,
+    [args]
   );
 
-  const hexOfFundFunction = ethers.utils.hexlify(
-    ethers.utils.toUtf8Bytes(FUNC_FUND)
-  );
-
-  const encodedFunctionCall = hexOfFundFunction.toString() + args.toString();
   const proposalTx = await governor.propose(
-    [fundProject.address],
+    [fundProjectContract.address],
     [0],
-    [ethers.utils.hexlify(ethers.utils.toUtf8Bytes(encodedFunctionCall))],
+    [encodedFunctionCall],
     args
   );
   const proposeReceipt = await proposalTx.wait(1);
@@ -109,39 +104,8 @@ async function submitAndPropose(
   proposals[network.config.chainId.toString()].push(proposalId.toString());
   fs.writeFileSync(proposalsFile, JSON.stringify(proposals));
 
-  console.log(`Proposing ${FUNC_FUND} on ${fundProject.address}`);
+  console.log(`Proposing ${FUNC_FUND} on ${fundProjectContract.address}`);
   console.log(`Proposal description: \n ${proposalDescription}`);
-  console.log(`encodedFunctioncall ${encodedFunctionCall}`);
-
-  /* const hexOfFundFunction = ethers.utils.hexlify(
-    ethers.utils.toUtf8Bytes(FUNC_FUND)
-  );
-  const hexOfProposalDescription = ethers.utils.hexlify(
-    ethers.utils.toUtf8Bytes(proposalDescription)
-  );
-
-  const encodedFunctionCall =
-    hexOfFundFunction.toString() + hexOfProposalDescription.toString();
-
-  const proposalTx = await governor.propose(
-    [fundProject.address],
-    [0],
-    [ethers.utils.hexlify(ethers.utils.toUtf8Bytes(encodedFunctionCall))],
-    proposalDescription
-  );
-  const proposeReceipt = await proposalTx.wait(1);
-
-  if (developmentChains.includes(network.name)) {
-    await moveBlocks(VOTING_DELAY + 1);
-  }
-  const proposalId = proposeReceipt.events[0].args.proposalId;
-  let proposals = JSON.parse(fs.readFileSync(proposalsFile), "utf8");
-  proposals[network.config.chainId.toString()].push(proposalId.toString());
-  fs.writeFileSync(proposalsFile, JSON.stringify(proposals));
-
-  console.log(`Proposing ${FUNC_FUND} on ${fundProject.address}`);
-  console.log(`Proposal description: \n ${proposalDescription}`);
-  console.log(`encodedFunctioncall ${encodedFunctionCall}`); */
 
   return ProjectMetadataUploadResponse.IpfsHash;
 }

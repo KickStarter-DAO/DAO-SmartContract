@@ -27,6 +27,9 @@ async function vote(proposalIndex) {
     await moveBlocks(VOTING_PERIOD + 1);
   }
   console.log("Voted! Ready to gooo!");
+
+  let proposalState = await governor.state(proposalId);
+  console.log(proposalState);
 }
 
 vote(index)
