@@ -11,6 +11,8 @@ contract FundProject is Ownable {
     mapping(string => uint256) public hashToProjectId;
     mapping(uint256 => string) public idToHash;
     mapping(uint256 => mapping(address => uint256)) public funders;
+    mapping(uint256 => uint256) public projectFunds;
+    mapping(uint256 => uint256) public projectFundingGoalAmount;
     mapping(uint256 => bool) public _isApporovedByDao;
 
     modifier isApporovedByDao(uint256 _projecID) {
@@ -25,10 +27,15 @@ contract FundProject is Ownable {
         isApporovedByDao(_projecID)
     {
         funders[_projecID][msg.sender] += msg.value;
+        projectFunds[_projecID] += msg.value;
     }
 
-    function apporoveFundingByDao(string memory _ipfsHash) external onlyOwner {
+    function apporoveFundingByDao(
+        string memory _ipfsHash,
+        uint256 _fundingGoalAmount
+    ) external onlyOwner {
         // only dao can call this function (after deployement we will transfer ownership to dao)
+        projectFundingGoalAmount[projectId] = _fundingGoalAmount;
         hashToProjectId[_ipfsHash] = projectId;
         idToHash[projectId] = _ipfsHash;
         _isApporovedByDao[projectId] = true;
@@ -62,5 +69,21 @@ contract FundProject is Ownable {
         returns (uint256)
     {
         return hashToProjectId[_ipfsHash];
+    }
+
+    function _getBalanceOfProject(uint256 _projecID)
+        public
+        view
+        returns (uint256)
+    {
+        return projectFunds[_projecID];
+    }
+
+    function _getFundingGoalAmount(uint256 _projecID)
+        public
+        view
+        returns (uint256)
+    {
+        return projectFundingGoalAmount[_projecID];
     }
 }

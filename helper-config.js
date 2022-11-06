@@ -19,6 +19,7 @@ const ADDRESS_ZERO = "0x0000000000000000000000000000000000000000";
 const NEW_VALUE = 77;
 const FUNC = "store";
 const FUNC_FUND = "apporoveFundingByDao";
+const FUNC_CANCEL_APPOROVEL = "cancelApporovelFundingByDao";
 const PROPOSAL_DESCRIPTION = "Propasol #1: Store 77 in the Box!";
 const proposalsFile = "./proposals.json";
 const s_projectID = 1;
@@ -53,4 +54,5 @@ module.exports = {
   s_roadMap,
   s_otherSources,
   FUNC_FUND,
+  FUNC_CANCEL_APPOROVEL,
 };
