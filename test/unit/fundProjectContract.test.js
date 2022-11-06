@@ -428,8 +428,17 @@ const fs = require("fs");
           console.log("Executed!");
           const fundableCancel =
             await fundProjectContract._isApporoveFundingByDao(projectId);
-          console.log(fundableCancel);
+
           assert(!fundableCancel);
+
+          assert(await fundProjectContract._getHashOfProjectData(projectId));
+          assert(await fundProjectContract._getProjectId(proposalDescription));
+          assert(await fundProjectContract._getBalanceOfProject(projectId));
+          assert(await fundProjectContract._getFundingGoalAmount(projectId));
+
+          await expect(
+            fundProjectContract.fund(projectId + 1, { value: sendValue })
+          ).to.be.revertedWith("FundProject__NotApporovedByDao");
         });
       });
     });
