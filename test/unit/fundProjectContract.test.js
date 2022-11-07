@@ -246,7 +246,7 @@ const fs = require("fs");
           console.log(`Current Proposal State: ${proposalState}`);
 
           // getting to results
-          const { againstVotes, forVotes, abstainVotes } =
+          let { againstVotes, forVotes, abstainVotes } =
             await governor.proposalVotes(proposalId);
           console.log(`ProposalId = ${proposalId}`);
           console.log(
@@ -389,11 +389,17 @@ const fs = require("fs");
           console.log(`Current Proposal State: ${proposalState}`);
 
           // getting to results
-          const { againstVotesCancel, forVotesCancel, abstainVotesCancel } =
-            await governor.proposalVotes(proposalIdCancel);
-          /* console.log(`Vote on against: ${againstVotesCancel}`);
-          console.log(`Vote on for: ${forVotesCancel}`);
-          console.log(`Vote on abstain: ${abstainVotesCancel}`); */
+          [againstVotes, forVotes, abstainVotes] = await governor.proposalVotes(
+            proposalIdCancel
+          );
+
+          console.log(
+            `Vote on against: ${ethers.utils.formatEther(againstVotes)}`
+          );
+          console.log(`Vote on for: ${ethers.utils.formatEther(forVotes)}`);
+          console.log(
+            `Vote on abstain: ${ethers.utils.formatEther(abstainVotes)}`
+          );
 
           assert.equal(proposalState.toString(), "4");
 
