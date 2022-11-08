@@ -9,6 +9,15 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
     error FundProject__UpkeepNeeded();
     error FundProject__TransferFailed(uint256 _projectId);
     error FundProject__NotEnoughPayment();
+    error FundProject__withdrawFund();
+    error FundProject__WithdrawTransferFailed();
+
+    enum ProjectFundingStatus {
+        ONPROGRESS,
+        SUCCESS,
+        FAILED,
+        CANCELED
+    }
 
     uint256 public projectId = 1;
 
@@ -28,6 +37,7 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
     mapping(uint256 => uint256) public projectFundingGoalAmount;
     mapping(uint256 => bool) public _isApporovedByDao;
     mapping(uint256 => address) public projectOwnerAddress;
+    mapping(uint256 => ProjectFundingStatus) public _ProjectFundingStatus;
 
     event projectSuccessfullyFunded(uint256 indexed _projectId);
 
@@ -60,6 +70,7 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
     ) external onlyOwner {
         // only dao can call this function (after deployement we will transfer ownership to dao)
         projectToTime[projectId][_time] = block.timestamp;
+        _ProjectFundingStatus[projectId] = ProjectFundingStatus.ONPROGRESS;
         time[projectId] = _time;
         projectFundingGoalAmount[projectId] = _fundingGoalAmount;
         hashToProjectId[_ipfsHash] = projectId;
@@ -74,6 +85,7 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
         // only dao can call this function (after deployement we will transfer ownership to dao)
         _isApporovedByDao[_projecID] = false;
         _isFunding[projectId] = false;
+        _ProjectFundingStatus[projectId] = ProjectFundingStatus.CANCELED;
     }
 
     function checkUpkeep(
@@ -103,6 +115,7 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
         _isApporovedByDao[projectId] = false;
 
         if (projectFunds[projectId] > projectFundingGoalAmount[projectId]) {
+            _ProjectFundingStatus[projectId] = ProjectFundingStatus.SUCCESS;
             uint256 fundsToSent = (projectFunds[projectId] * daoPercentage) /
                 100;
             (bool success, ) = (projectOwnerAddress[projectId]).call{
@@ -113,6 +126,8 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
             }
 
             emit projectSuccessfullyFunded(projectId);
+        } else {
+            _ProjectFundingStatus[projectId] = ProjectFundingStatus.FAILED;
         }
     }
 
@@ -121,6 +136,20 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
             revert FundProject__NotEnoughPayment();
         }
         projectOwners = payable(msg.sender);
+    }
+
+    function withdrawFund(uint256 _projectID) public {
+        if (_ProjectFundingStatus[_projectID] == ProjectFundingStatus.FAILED) {
+            uint256 fundToSent = funders[_projectID][msg.sender];
+            (bool success, ) = (payable(msg.sender)).call{value: fundToSent}(
+                ""
+            );
+            if (!success) {
+                revert FundProject__WithdrawTransferFailed();
+            }
+        } else {
+            revert FundProject__withdrawFund();
+        }
     }
 
     function _isApporoveFundingByDao(uint256 _projecID)
@@ -165,5 +194,13 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
 
     function is_funding(uint256 _projectID) public view returns (bool) {
         return _isFunding[_projectID];
+    }
+
+    function _getProjectStatus(uint256 _projectID)
+        public
+        view
+        returns (ProjectFundingStatus)
+    {
+        return _ProjectFundingStatus[_projectID];
     }
 }
