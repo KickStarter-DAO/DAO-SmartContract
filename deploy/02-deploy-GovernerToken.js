@@ -12,6 +12,8 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     waitConfirmations: network.config.blockConfirmations || 1,
   });
   log(`governanceToken deployed at ${governanceToken.address}`);
+  await delegate(governanceToken.address, deployer);
+  console.log(`Delegated!`);
 
   if (
     !developmentChains.includes(network.name) &&
@@ -20,7 +22,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     await verify(governanceToken.address, []);
   }
 
-  const timeLock = await ethers.getContract("TimeLock");
+  /* const timeLock = await ethers.getContract("TimeLock");
   const governanceTokenContract = await ethers.getContractAt(
     "GovernanceToken",
     governanceToken.address
@@ -29,7 +31,19 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     timeLock.address
   );
   await transferOwnerTx.wait(1);
-  log("governanceTokenContract Ownership transfered!");
+  log("governanceTokenContract Ownership transfered!"); */
+};
+
+const delegate = async (governanceTokenAddress, delegatedAccount) => {
+  const governanceToken = await ethers.getContractAt(
+    "GovernanceToken",
+    governanceTokenAddress
+  );
+  const tx = await governanceToken.delegate(delegatedAccount);
+  await tx.wait(1);
+  console.log(
+    `Checkpoint ${await governanceToken.numCheckpoints(delegatedAccount)}`
+  );
 };
 
 module.exports.tags = ["all", "governanceToken"];

@@ -1,17 +1,14 @@
 const { ethers, deployments, getNamedAccounts, network } = require("hardhat");
-
 const { assert, expect } = require("chai");
-
 const {
-  FUNC,
-  NEW_VALUE,
-  PROPOSAL_DESCRIPTION,
+  FUNC_FUND,
   developmentChains,
   VOTING_DELAY,
-  proposalsFile,
   VOTING_PERIOD,
   MIN_DELAY,
   INITIAL_SUPPLY,
+  s_fundingTime,
+  s_fundRaisingGoalAmount,
 } = require("../../helper-config");
 const { moveBlocks } = require("../../utils/move-blocks");
 const { moveTime } = require("../../utils/move-time");
@@ -24,14 +21,16 @@ const fs = require("fs");
         account1,
         account2,
         account3,
+        projectOwner,
         governor,
         timeLock,
-        box,
+        fund,
         blockNumber;
       beforeEach(async function () {
         account1 = (await ethers.getSigners())[1];
         account2 = (await ethers.getSigners())[2];
         account3 = (await ethers.getSigners())[3];
+        projectOwner = (await ethers.getSigners())[4];
         deployer = (await getNamedAccounts()).deployer;
 
         await deployments.fixture("all");
@@ -44,39 +43,14 @@ const fs = require("fs");
 
       it("was deployed", async () => {
         assert(gtToken.address);
+
         assert(governor.address);
         assert(timeLock.address);
       });
 
-      it("Only Owner can mint token", async () => {
-        // console.log((await gtToken.balanceOf(deployer)).toString());
+      it("Only Dao can mint token", async () => {});
 
-        const tx = await gtToken.mintToken(
-          deployer,
-          ethers.BigNumber.from("1000000000000000000000000")
-        );
-        await tx.wait(1);
-
-        // console.log((await gtToken.balanceOf(deployer)).toString());
-
-        expect((await gtToken.balanceOf(deployer)).toString()).to.equal(
-          "2000000000000000000000000"
-        );
-        gtToken = await ethers.getContract("GovernanceToken", account1.address);
-
-        await expect(
-          gtToken.mintToken(
-            account1.address,
-            ethers.BigNumber.from("1000000000000000000000000")
-          )
-        ).to.be.revertedWith("Ownable: caller is not the owner");
-      });
-
-      it("can only be changed through governance", async () => {
-        await expect(box.store(55)).to.be.revertedWith(
-          "Ownable: caller is not the owner"
-        );
-      });
+      it("can only be changed through governance", async () => {});
 
       //--------------------------------------------------------------------------------
 
@@ -153,16 +127,35 @@ const fs = require("fs");
               blockNumber - 1
             )}`
           );
+          const letsTry = await ethers.getContract(
+            "GovernanceToken",
+            projectOwner
+          );
+          const args = "QmPwX1rNoYRmQAPDm8Dp7YSeFdxPKaczWaBu8NPgVpKufu";
+          const encodedFunctionCall = governor.interface.encodeFunctionData(
+            FUNC_FUND,
+            [args, s_fundRaisingGoalAmount, s_fundingTime, projectOwner.address]
+          );
 
-          const encodedFunctionCall = box.interface.encodeFunctionData(FUNC, [
-            NEW_VALUE,
-          ]);
+          const enteranceFee = await governor.getEnteranceFee();
+
+          /* await expect(
+            governor.propose(
+              [governor.address],
+              [0],
+              [encodedFunctionCall],
+              args
+            )
+          ).to.be.revertedWith(`GovernerContract__NeedEnteranceFee`); */
+
+          const payFee = await governor.paySubmitFee({ value: enteranceFee });
+          await payFee.wait(1);
 
           const proposalTx = await governor.propose(
-            [box.address],
+            [governor.address],
             [0],
             [encodedFunctionCall],
-            PROPOSAL_DESCRIPTION
+            args
           );
           const proposeReceipt = await proposalTx.wait(1);
 
@@ -175,7 +168,6 @@ const fs = require("fs");
           const deadline = await governor.proposalDeadline(proposalId);
           console.log(`Proposal deadline on block ${deadline.toString()}`);
 
-          console.log(`Current Proposal State: ${proposalState}`);
           /*   enum ProposalState {
                 Pending,
                 Active,
@@ -270,7 +262,7 @@ const fs = require("fs");
           await moveBlocks(VOTING_PERIOD + 1);
 
           proposalState = await governor.state(proposalId);
-          console.log(`Current Proposal State: ${proposalState}`);
+          // console.log(`Current Proposal State: ${proposalState}`);
 
           // getting to results
           const { againstVotes, forVotes, abstainVotes } =
@@ -288,12 +280,12 @@ const fs = require("fs");
           // its time to queue & execute
 
           const descriptionHash = ethers.utils.keccak256(
-            ethers.utils.toUtf8Bytes(PROPOSAL_DESCRIPTION)
+            ethers.utils.toUtf8Bytes(args)
           );
           governor = await ethers.getContract("GovernerContract");
           console.log("Queueing...");
           const queueTx = await governor.queue(
-            [box.address],
+            [governor.address],
             [0],
             [encodedFunctionCall],
             descriptionHash
@@ -303,15 +295,12 @@ const fs = require("fs");
           await moveBlocks(1);
           console.log("Executing...");
           const executeTx = await governor.execute(
-            [box.address],
+            [governor.address],
             [0],
             [encodedFunctionCall],
             descriptionHash
           );
           await executeTx.wait(1);
-          const boxNewValue = await box.retrieve();
-          console.log(`New Box Value: ${boxNewValue.toString()}`);
-          assert.equal(boxNewValue.toString(), "77");
         });
 
         it("Result of voting against", async () => {
@@ -352,15 +341,26 @@ const fs = require("fs");
 
           blockNumber = await ethers.provider.getBlockNumber();
 
-          const encodedFunctionCall = box.interface.encodeFunctionData(FUNC, [
-            NEW_VALUE,
-          ]);
+          const letsTry = await ethers.getContract(
+            "GovernanceToken",
+            projectOwner
+          );
+          const args = "QmPwX1rNoYRmQAPDm8Dp7YSeFdxPKaczWaBu8NPgVpKufu";
+          const encodedFunctionCall = governor.interface.encodeFunctionData(
+            FUNC_FUND,
+            [args, s_fundRaisingGoalAmount, s_fundingTime, projectOwner.address]
+          );
+
+          const enteranceFee = await governor.getEnteranceFee();
+
+          const payFee = await governor.paySubmitFee({ value: enteranceFee });
+          await payFee.wait(1);
 
           const proposalTx = await governor.propose(
-            [box.address],
+            [governor.address],
             [0],
             [encodedFunctionCall],
-            PROPOSAL_DESCRIPTION
+            args
           );
           const proposeReceipt = await proposalTx.wait(1);
 
@@ -427,14 +427,14 @@ const fs = require("fs");
           // its time to queue & execute
 
           const descriptionHash = ethers.utils.keccak256(
-            ethers.utils.toUtf8Bytes(PROPOSAL_DESCRIPTION)
+            ethers.utils.toUtf8Bytes(args)
           );
           governor = await ethers.getContract("GovernerContract");
           console.log("Queueing...");
 
           await expect(
             governor.queue(
-              [box.address],
+              [governor.address],
               [0],
               [encodedFunctionCall],
               descriptionHash
@@ -446,15 +446,12 @@ const fs = require("fs");
 
           await expect(
             governor.execute(
-              [box.address],
+              [governor.address],
               [0],
               [encodedFunctionCall],
               descriptionHash
             )
           ).to.be.revertedWith("Governor: proposal not successful");
-
-          const boxNewValue = await box.retrieve();
-          assert.equal(boxNewValue.toString(), "0");
         });
       });
       //******************************************************************************** */

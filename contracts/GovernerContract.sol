@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/governance/extensions/GovernorCountingSimple.sol
 import "@openzeppelin/contracts/governance/extensions/GovernorVotes.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorTimelockControl.sol";
-
+import "./FundProject.sol";
 
 contract GovernerContract is
     Governor,
@@ -16,15 +16,18 @@ contract GovernerContract is
     GovernorVotes,
     GovernorVotesQuorumFraction,
     GovernorTimelockControl,
-    
+    FundProject
 {
+    error GovernerContract__NeedEnteranceFee();
+
     constructor(
         IVotes _token,
         TimelockController _timelock,
         uint256 _votingDelay,
         uint256 _votingPeriod,
         uint256 _quorumPercentage,
-      
+        uint256 _enteranceFee,
+        uint256 _daoPercentage
     )
         Governor("GovernerContract")
         GovernorSettings(
@@ -82,6 +85,9 @@ contract GovernerContract is
         bytes[] memory calldatas,
         string memory description
     ) public override(Governor, IGovernor) returns (uint256) {
+        if (!_isEnteranceFeePaid[msg.sender]) {
+            revert GovernerContract__NeedEnteranceFee();
+        }
         return super.propose(targets, values, calldatas, description);
     }
 

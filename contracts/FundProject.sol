@@ -4,15 +4,15 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@chainlink/contracts/src/v0.8/AutomationCompatible.sol";
 
-contract FundProject is Ownable, AutomationCompatibleInterface {
-    error FundProject__NotApporovedByDao();
-    error FundProject__UpkeepNeeded();
-    error FundProject__TransferFailed(uint256 _projectId);
-    error FundProject__NotEnoughPayment();
-    error FundProject__withdrawFund();
-    error FundProject__WithdrawTransferFailed();
-    error FundProject__EnteranceFeeNeeded();
+error FundProject__NotApporovedByDao();
+error FundProject__UpkeepNeeded();
+error FundProject__TransferFailed(uint256 _projectId);
+error FundProject__NotEnoughPayment();
+error FundProject__withdrawFund();
+error FundProject__WithdrawTransferFailed();
+error FundProject__EnteranceFeeNeeded();
 
+contract FundProject is Ownable, AutomationCompatibleInterface {
     enum ProjectFundingStatus {
         ONPROGRESS,
         SUCCESS,
@@ -42,6 +42,8 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
 
     event projectSuccessfullyFunded(uint256 indexed _projectId);
     event projectFundingFailed(uint256 indexed _projectId);
+    event enteranceFeePaid(address indexed _projectOwner);
+    event projectGoesToFunding(uint256 indexed _projectId);
 
     modifier isApporovedByDao(uint256 _projecID) {
         if (!_isApporovedByDao[_projecID])
@@ -83,6 +85,7 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
             projectOwnerAddress[projectId] = _projectOwnerAddress;
             _isApporovedByDao[projectId] = true;
             _isFunding[projectId] = true;
+            emit projectGoesToFunding(projectId);
             projectId++;
         }
     }
@@ -143,6 +146,7 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
             revert FundProject__NotEnoughPayment();
         } else {
             _isEnteranceFeePaid[msg.sender] = true;
+            emit enteranceFeePaid(msg.sender);
         }
     }
 
@@ -214,5 +218,9 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
 
     function getEnteranceFee() public view returns (uint256) {
         return enteranceFee;
+    }
+
+    function isEnteranceFeePaid(address account) public view returns (bool) {
+        return _isEnteranceFeePaid[account];
     }
 }

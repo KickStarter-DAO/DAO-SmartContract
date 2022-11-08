@@ -13,7 +13,6 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   const { deployer } = await getNamedAccounts();
   const governanceToken = await ethers.getContract("GovernanceToken");
   const timelock = await ethers.getContract("TimeLock");
-
   const chainId = network.config.chainId;
   const enteranceFee = networkConfig[chainId]["enteranceFee"];
   const daoPercentage = networkConfig[chainId]["daoPercentage"];
@@ -41,6 +40,16 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   ) {
     await verify(governorContract.address, args);
   }
+  const timeLock = await ethers.getContract("TimeLock");
+  const governanceContract = await ethers.getContractAt(
+    "GovernanceToken",
+    governorContract.address
+  );
+  const transferOwnerTx = await governanceContract.transferOwnership(
+    timeLock.address
+  );
+  await transferOwnerTx.wait(1);
+  log("governanceContract Ownership transfered!");
 };
 
 module.exports.tags = ["all", "governorContract"];

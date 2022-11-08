@@ -2,7 +2,6 @@ const { ethers, network } = require("hardhat");
 const { storeImages, storeProjectData } = require("./uploadToPinata");
 const fs = require("fs");
 const {
-  s_projectID,
   s_projectName,
   s_website,
   s_description,
@@ -10,9 +9,6 @@ const {
   s_fundRaisingGoalAmount,
   s_roadMap,
   s_otherSources,
-  FUNC,
-  NEW_VALUE,
-  PROPOSAL_DESCRIPTION,
   developmentChains,
   VOTING_DELAY,
   proposalsFile,
@@ -81,7 +77,7 @@ async function submitAndPropose(
   const proposalDescription = ProjectMetadataUploadResponse.IpfsHash;
 
   const nodeAccount2 = "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC"; // account2 from node
-  const governor = await ethers.getContract("GovernerContract");
+  const governor = await ethers.getContract("GovernerContract", nodeAccount2);
 
   const args = "QmPwX1rNoYRmQAPDm8Dp7YSeFdxPKaczWaBu8NPgVpKufu";
 
@@ -98,7 +94,9 @@ async function submitAndPropose(
     ethers.utils.formatEther(await ethers.provider.getBalance(nodeAccount2))
   );
  */
-  const options = { value: ethers.utils.parseEther("1.0") };
+
+  const payFee = await governor.paySubmitFee({ value: enteranceFee });
+  await payFee.wait(1);
 
   const proposalTx = await governor.propose(
     [governor.address],
