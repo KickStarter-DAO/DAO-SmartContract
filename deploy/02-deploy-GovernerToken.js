@@ -1,37 +1,35 @@
 const { getNamedAccounts, deployments, network, ethers } = require("hardhat");
-const { developmentChains } = require("../helper-config");
+const { developmentChains, INITIAL_SUPPLY } = require("../helper-config");
 const { verify } = require("../utils/verify");
 
 module.exports = async ({ getNamedAccounts, deployments }) => {
   const { deploy, log } = deployments;
   const { deployer } = await getNamedAccounts();
-
-  args = [];
-  log("deploying FundProject contract...");
-  const fundProject = await deploy("FundProject", {
+  const governanceToken = await deploy("GovernanceToken", {
     from: deployer,
-    args: args,
+    args: [],
     log: true,
     waitConfirmations: network.config.blockConfirmations || 1,
   });
-  log(`FundProject deployed at ${fundProject.address}`);
+  log(`governanceToken deployed at ${governanceToken.address}`);
 
   if (
     !developmentChains.includes(network.name) &&
     process.env.ETHERSCAN_API_KEY
   ) {
-    await verify(fundProject.address, args);
+    await verify(governanceToken.address, []);
   }
+
   const timeLock = await ethers.getContract("TimeLock");
-  const fundProjectContract = await ethers.getContractAt(
-    "FundProject",
-    fundProject.address
+  const governanceTokenContract = await ethers.getContractAt(
+    "GovernanceToken",
+    governanceToken.address
   );
-  const transferOwnerTx = await fundProjectContract.transferOwnership(
+  const transferOwnerTx = await governanceTokenContract.transferOwnership(
     timeLock.address
   );
   await transferOwnerTx.wait(1);
-  log("fundProjectContract Ownership transfered!");
+  log("governanceTokenContract Ownership transfered!");
 };
 
-module.exports.tags = ["all", "funding"];
+module.exports.tags = ["all", "governanceToken"];

@@ -11,6 +11,7 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
     error FundProject__NotEnoughPayment();
     error FundProject__withdrawFund();
     error FundProject__WithdrawTransferFailed();
+    error FundProject__EnteranceFeeNeeded();
 
     enum ProjectFundingStatus {
         ONPROGRESS,
@@ -24,7 +25,6 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
     uint public lastTimeStamp;
     uint256 public daoPercentage;
     uint256 public enteranceFee;
-    address payable projectOwners;
 
     mapping(uint256 => bool) public _isFunding;
     mapping(uint256 => mapping(uint256 => uint256)) public projectToTime; // projectId => projectFundingTime => timestamp of add
@@ -38,8 +38,10 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
     mapping(uint256 => bool) public _isApporovedByDao;
     mapping(uint256 => address) public projectOwnerAddress;
     mapping(uint256 => ProjectFundingStatus) public _ProjectFundingStatus;
+    mapping(address => bool) public _isEnteranceFeePaid;
 
     event projectSuccessfullyFunded(uint256 indexed _projectId);
+    event projectFundingFailed(uint256 indexed _projectId);
 
     modifier isApporovedByDao(uint256 _projecID) {
         if (!_isApporovedByDao[_projecID])
@@ -68,21 +70,25 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
         uint256 _time,
         address _projectOwnerAddress
     ) external onlyOwner {
-        // only dao can call this function (after deployement we will transfer ownership to dao)
-        projectToTime[projectId][_time] = block.timestamp;
-        _ProjectFundingStatus[projectId] = ProjectFundingStatus.ONPROGRESS;
-        time[projectId] = _time;
-        projectFundingGoalAmount[projectId] = _fundingGoalAmount;
-        hashToProjectId[_ipfsHash] = projectId;
-        idToHash[projectId] = _ipfsHash;
-        projectOwnerAddress[projectId] = _projectOwnerAddress;
-        _isApporovedByDao[projectId] = true;
-        _isFunding[projectId] = true;
-        projectId++;
+        // only dao can call it
+        if (!_isEnteranceFeePaid[_projectOwnerAddress]) {
+            revert FundProject__EnteranceFeeNeeded();
+        } else {
+            projectToTime[projectId][_time] = block.timestamp;
+            _ProjectFundingStatus[projectId] = ProjectFundingStatus.ONPROGRESS;
+            time[projectId] = _time;
+            projectFundingGoalAmount[projectId] = _fundingGoalAmount;
+            hashToProjectId[_ipfsHash] = projectId;
+            idToHash[projectId] = _ipfsHash;
+            projectOwnerAddress[projectId] = _projectOwnerAddress;
+            _isApporovedByDao[projectId] = true;
+            _isFunding[projectId] = true;
+            projectId++;
+        }
     }
 
     function cancelApporovelFundingByDao(uint256 _projecID) external onlyOwner {
-        // only dao can call this function (after deployement we will transfer ownership to dao)
+        // only dao can call it
         _isApporovedByDao[_projecID] = false;
         _isFunding[projectId] = false;
         _ProjectFundingStatus[projectId] = ProjectFundingStatus.CANCELED;
@@ -128,14 +134,16 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
             emit projectSuccessfullyFunded(projectId);
         } else {
             _ProjectFundingStatus[projectId] = ProjectFundingStatus.FAILED;
+            emit projectFundingFailed(projectId);
         }
     }
 
     function paySubmitFee() public payable {
         if (msg.value < enteranceFee) {
             revert FundProject__NotEnoughPayment();
+        } else {
+            _isEnteranceFeePaid[msg.sender] = true;
         }
-        projectOwners = payable(msg.sender);
     }
 
     function withdrawFund(uint256 _projectID) public {
@@ -202,5 +210,9 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
         returns (ProjectFundingStatus)
     {
         return _ProjectFundingStatus[_projectID];
+    }
+
+    function getEnteranceFee() public view returns (uint256) {
+        return enteranceFee;
     }
 }

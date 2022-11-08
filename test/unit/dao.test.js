@@ -38,7 +38,6 @@ const fs = require("fs");
         gtToken = await ethers.getContract("GovernanceToken");
         governor = await ethers.getContract("GovernerContract");
         timeLock = await ethers.getContract("TimeLock");
-        box = await ethers.getContract("Box");
 
         gtToken = await ethers.getContract("GovernanceToken", deployer);
       });
@@ -47,7 +46,6 @@ const fs = require("fs");
         assert(gtToken.address);
         assert(governor.address);
         assert(timeLock.address);
-        assert(box.address);
       });
 
       it("Only Owner can mint token", async () => {

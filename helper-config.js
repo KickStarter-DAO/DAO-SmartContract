@@ -3,9 +3,13 @@ const { ethers } = require("hardhat");
 const networkConfig = {
   5: {
     name: "goerli",
+    enteranceFee: ethers.utils.parseEther("0.01"),
+    daoPercentage: "10",
   },
   31337: {
     name: "hardhat",
+    enteranceFee: ethers.utils.parseEther("0.01"),
+    daoPercentage: "10",
   },
 };
 
@@ -31,6 +35,7 @@ const s_video =
 const s_fundRaisingGoalAmount = 10000;
 const s_roadMap = "Just click the video";
 const s_otherSources = "You dont need anything else";
+const s_fundingTime = 60; // 10 sec.
 
 module.exports = {
   developmentChains,
@@ -53,6 +58,7 @@ module.exports = {
   s_fundRaisingGoalAmount,
   s_roadMap,
   s_otherSources,
+  s_fundingTime,
   FUNC_FUND,
   FUNC_CANCEL_APPOROVEL,
 };

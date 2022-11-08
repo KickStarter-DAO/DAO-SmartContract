@@ -2,10 +2,10 @@
 pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract GovernanceToken is ERC20Votes {
+contract GovernanceToken is ERC20Votes, Ownable {
     uint256 public s_initialSupply = 1000000e18;
-    address private immutable i_owner;
 
     event TokenTransfer(
         address indexed _from,
@@ -13,16 +13,10 @@ contract GovernanceToken is ERC20Votes {
         uint256 _amount
     );
 
-    modifier onlyOwner() {
-        require(i_owner == msg.sender, "Ownable: caller is not the owner");
-        _;
-    }
-
     constructor()
         ERC20("GovernanceToken", "GT")
         ERC20Permit("GovernanceToken")
     {
-        i_owner = msg.sender;
         _mint(msg.sender, s_initialSupply);
     }
 

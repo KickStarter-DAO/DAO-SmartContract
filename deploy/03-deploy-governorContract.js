@@ -4,6 +4,7 @@ const {
   VOTING_PERIOD,
   VOTING_DELAY,
   QUORUM_PERCENTAGE,
+  networkConfig,
 } = require("../helper-config");
 const { verify } = require("../utils/verify");
 
@@ -13,12 +14,18 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   const governanceToken = await ethers.getContract("GovernanceToken");
   const timelock = await ethers.getContract("TimeLock");
 
+  const chainId = network.config.chainId;
+  const enteranceFee = networkConfig[chainId]["enteranceFee"];
+  const daoPercentage = networkConfig[chainId]["daoPercentage"];
+
   args = [
     governanceToken.address,
     timelock.address,
     VOTING_DELAY,
     VOTING_PERIOD,
     QUORUM_PERCENTAGE,
+    enteranceFee,
+    daoPercentage,
   ];
   const governorContract = await deploy("GovernerContract", {
     from: deployer,
