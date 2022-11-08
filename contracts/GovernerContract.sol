@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/governance/extensions/GovernorCountingSimple.sol
 import "@openzeppelin/contracts/governance/extensions/GovernorVotes.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorTimelockControl.sol";
+import "./FundProject.sol";
 
 contract GovernerContract is
     Governor,
@@ -14,15 +15,15 @@ contract GovernerContract is
     GovernorCountingSimple,
     GovernorVotes,
     GovernorVotesQuorumFraction,
-    GovernorTimelockControl
+    GovernorTimelockControl,
+    FundProject
 {
     error GovernerContract__NotApporovedByDaoFoundation();
 
     mapping(address => bool) public inWhiteList;
 
-    modifier isApporovedByDaoFoundation() {
-        if (!inWhiteList[msg.sender])
-            revert GovernerContract__NotApporovedByDaoFoundation();
+    modifier isSubmitFeePaid() {
+        paySubmitFee();
         _;
     }
 
@@ -31,7 +32,9 @@ contract GovernerContract is
         TimelockController _timelock,
         uint256 _votingDelay,
         uint256 _votingPeriod,
-        uint256 _quorumPercentage
+        uint256 _quorumPercentage,
+        uint256 _enteranceFee,
+        uint256 _daoPercentage
     )
         Governor("GovernerContract")
         GovernorSettings(
@@ -42,6 +45,7 @@ contract GovernerContract is
         GovernorVotes(_token)
         GovernorVotesQuorumFraction(_quorumPercentage)
         GovernorTimelockControl(_timelock)
+        FundProject(_enteranceFee, _daoPercentage)
     {}
 
     // The following functions are overrides required by Solidity.
@@ -87,7 +91,7 @@ contract GovernerContract is
         uint256[] memory values,
         bytes[] memory calldatas,
         string memory description
-    ) public override(Governor, IGovernor) returns (uint256) {
+    ) public override(Governor, IGovernor) isSubmitFeePaid returns (uint256) {
         return super.propose(targets, values, calldatas, description);
     }
 
