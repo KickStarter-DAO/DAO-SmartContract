@@ -17,6 +17,7 @@ const {
   VOTING_DELAY,
   proposalsFile,
   FUNC_FUND,
+  s_fundingTime,
 } = require("../helper-config");
 
 const { moveBlocks } = require("../utils/move-blocks");
@@ -79,17 +80,28 @@ async function submitAndPropose(
 
   const proposalDescription = ProjectMetadataUploadResponse.IpfsHash;
 
+  const nodeAccount2 = "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC"; // account2 from node
   const governor = await ethers.getContract("GovernerContract");
-  const fundProjectContract = await ethers.getContract("FundProject");
 
   const args = "QmPwX1rNoYRmQAPDm8Dp7YSeFdxPKaczWaBu8NPgVpKufu";
-  const encodedFunctionCall = fundProjectContract.interface.encodeFunctionData(
-    FUNC_FUND,
-    [args]
+
+  const encodedFunctionCall = governor.interface.encodeFunctionData(FUNC_FUND, [
+    args,
+    s_fundRaisingGoalAmount,
+    s_fundingTime,
+    nodeAccount2,
+  ]);
+
+  const enteranceFee = await governor.getEnteranceFee();
+
+  /*  console.log(
+    ethers.utils.formatEther(await ethers.provider.getBalance(nodeAccount2))
   );
+ */
+  const options = { value: ethers.utils.parseEther("1.0") };
 
   const proposalTx = await governor.propose(
-    [fundProjectContract.address],
+    [governor.address],
     [0],
     [encodedFunctionCall],
     args
@@ -104,7 +116,7 @@ async function submitAndPropose(
   proposals[network.config.chainId.toString()].push(proposalId.toString());
   fs.writeFileSync(proposalsFile, JSON.stringify(proposals));
 
-  console.log(`Proposing ${FUNC_FUND} on ${fundProjectContract.address}`);
+  console.log(`Proposing ${FUNC_FUND} on ${governor.address}`);
   console.log(`Proposal description: \n ${proposalDescription}`);
 
   return ProjectMetadataUploadResponse.IpfsHash;
@@ -117,7 +129,8 @@ submitAndPropose(
   s_video,
   s_fundRaisingGoalAmount,
   s_roadMap,
-  s_otherSources
+  s_otherSources,
+  s_fundingTime
 )
   .then(() => process.exit(0))
   .catch((error) => {
