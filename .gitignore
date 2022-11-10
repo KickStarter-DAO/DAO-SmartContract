@@ -2,4 +2,7 @@
 artifacts
 cache
 node_modules
-fetchIpfs.js
+propose.js
+queue-and-execute.js
+submit.js
+05-deploy-fundProject.js

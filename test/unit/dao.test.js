@@ -32,7 +32,7 @@ const fs = require("fs");
         account3 = (await ethers.getSigners())[3];
         projectOwner = (await ethers.getSigners())[4];
         deployer = (await getNamedAccounts()).deployer;
-
+        projectOwner = deployer;
         await deployments.fixture("all");
         gtToken = await ethers.getContract("GovernanceToken");
         governor = await ethers.getContract("GovernerContract");
@@ -43,7 +43,6 @@ const fs = require("fs");
 
       it("was deployed", async () => {
         assert(gtToken.address);
-
         assert(governor.address);
         assert(timeLock.address);
       });
@@ -134,19 +133,19 @@ const fs = require("fs");
           const args = "QmPwX1rNoYRmQAPDm8Dp7YSeFdxPKaczWaBu8NPgVpKufu";
           const encodedFunctionCall = governor.interface.encodeFunctionData(
             FUNC_FUND,
-            [args, s_fundRaisingGoalAmount, s_fundingTime, projectOwner.address]
+            [args, s_fundRaisingGoalAmount, s_fundingTime, projectOwner]
           );
 
           const enteranceFee = await governor.getEnteranceFee();
 
-          /* await expect(
+          await expect(
             governor.propose(
               [governor.address],
               [0],
               [encodedFunctionCall],
               args
             )
-          ).to.be.revertedWith(`GovernerContract__NeedEnteranceFee`); */
+          ).to.be.revertedWith(`GovernerContract__NeedEnteranceFee`);
 
           const payFee = await governor.paySubmitFee({ value: enteranceFee });
           await payFee.wait(1);
@@ -278,11 +277,11 @@ const fs = require("fs");
           assert.equal(proposalState.toString(), "4");
 
           // its time to queue & execute
-
+          governor = await ethers.getContract("GovernerContract");
           const descriptionHash = ethers.utils.keccak256(
             ethers.utils.toUtf8Bytes(args)
           );
-          governor = await ethers.getContract("GovernerContract");
+
           console.log("Queueing...");
           const queueTx = await governor.queue(
             [governor.address],
@@ -291,6 +290,7 @@ const fs = require("fs");
             descriptionHash
           );
           await queueTx.wait(1);
+          console.log("Queued");
           await moveTime(MIN_DELAY + 1);
           await moveBlocks(1);
           console.log("Executing...");
@@ -348,10 +348,19 @@ const fs = require("fs");
           const args = "QmPwX1rNoYRmQAPDm8Dp7YSeFdxPKaczWaBu8NPgVpKufu";
           const encodedFunctionCall = governor.interface.encodeFunctionData(
             FUNC_FUND,
-            [args, s_fundRaisingGoalAmount, s_fundingTime, projectOwner.address]
+            [args, s_fundRaisingGoalAmount, s_fundingTime, projectOwner]
           );
 
           const enteranceFee = await governor.getEnteranceFee();
+
+          await expect(
+            governor.propose(
+              [governor.address],
+              [0],
+              [encodedFunctionCall],
+              args
+            )
+          ).to.be.revertedWith(`GovernerContract__NeedEnteranceFee`);
 
           const payFee = await governor.paySubmitFee({ value: enteranceFee });
           await payFee.wait(1);

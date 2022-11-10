@@ -20,28 +20,28 @@
     </h1>
     <div class='clearfix'>
       <div class='fl pad1y space-right2'>
-        <span class="strong">72.73% </span>
+        <span class="strong">81.82% </span>
         <span class="quiet">Statements</span>
-        <span class='fraction'>8/11</span>
+        <span class='fraction'>9/11</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">0% </span>
+        <span class="strong">100% </span>
         <span class="quiet">Branches</span>
-        <span class='fraction'>0/2</span>
+        <span class='fraction'>2/2</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">75% </span>
+        <span class="strong">81.82% </span>
         <span class="quiet">Functions</span>
-        <span class='fraction'>9/12</span>
+        <span class='fraction'>9/11</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">61.54% </span>
+        <span class="strong">83.33% </span>
         <span class="quiet">Lines</span>
-        <span class='fraction'>8/13</span>
+        <span class='fraction'>10/12</span>
       </div>
     </div>
   </div>
-  <div class='status-line medium'></div>
+  <div class='status-line high'></div>
 <pre><table class="coverage">
 <tr><td class="line-count quiet">1
 2
@@ -205,9 +205,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -263,7 +260,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">29×</span>
+<span class="cline-any cline-yes">26×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -271,6 +268,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-yes">4×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">4×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -330,6 +330,7 @@ import "@openzeppelin/contracts/governance/extensions/GovernorCountingSimple.sol
 import "@openzeppelin/contracts/governance/extensions/GovernorVotes.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorTimelockControl.sol";
+import "./FundProject.sol";
 &nbsp;
 contract GovernerContract is
     Governor,
@@ -337,24 +338,19 @@ contract GovernerContract is
     GovernorCountingSimple,
     GovernorVotes,
     GovernorVotesQuorumFraction,
-    GovernorTimelockControl
+    GovernorTimelockControl,
+    FundProject
 {
-    error GovernerContract__NotApporovedByDaoFoundation();
-&nbsp;
-    mapping(address =&gt; bool) public inWhiteList;
-&nbsp;
-<span class="fstat-no" title="function not covered" >    modifier isApporovedByDaoFoundation() {</span>
-<span class="cstat-no" title="statement not covered" >        if (!inWhiteList[msg.sender])</span>
-            revert GovernerContract__NotApporovedByDaoFoundation();
-        _;
-    }
+    error GovernerContract__NeedEnteranceFee();
 &nbsp;
     constructor(
         IVotes _token,
         TimelockController _timelock,
         uint256 _votingDelay,
         uint256 _votingPeriod,
-        uint256 _quorumPercentage
+        uint256 _quorumPercentage,
+        uint256 _enteranceFee,
+        uint256 _daoPercentage
     )
         Governor("GovernerContract")
         GovernorSettings(
@@ -365,6 +361,7 @@ contract GovernerContract is
         GovernorVotes(_token)
         GovernorVotesQuorumFraction(_quorumPercentage)
         GovernorTimelockControl(_timelock)
+        FundProject(_enteranceFee, _daoPercentage)
     {}
 &nbsp;
     // The following functions are overrides required by Solidity.
@@ -411,6 +408,9 @@ contract GovernerContract is
         bytes[] memory calldatas,
         string memory description
     ) public override(Governor, IGovernor) returns (uint256) {
+        if (!_isEnteranceFeePaid[msg.sender]) {
+            revert GovernerContract__NeedEnteranceFee();
+        }
         return super.propose(targets, values, calldatas, description);
     }
 &nbsp;
@@ -466,7 +466,7 @@ contract GovernerContract is
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Sun Nov 06 2022 10:50:56 GMT+0300 (GMT+03:00)
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Wed Nov 09 2022 16:49:41 GMT+0300 (GMT+03:00)
 </div>
 </div>
 <script src="../prettify.js"></script>

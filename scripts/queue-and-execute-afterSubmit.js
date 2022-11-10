@@ -11,6 +11,7 @@ const { moveTime } = require("../utils/move-time");
 const fs = require("fs");
 
 async function queue_and_execute_afterSubmit() {
+  let projectId;
   const proposalDescription = "QmPwX1rNoYRmQAPDm8Dp7YSeFdxPKaczWaBu8NPgVpKufu";
   const args = "QmPwX1rNoYRmQAPDm8Dp7YSeFdxPKaczWaBu8NPgVpKufu";
   const nodeAccount2 = "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC"; // account2 from node
@@ -21,6 +22,7 @@ async function queue_and_execute_afterSubmit() {
     FUNC_FUND,
     [args, s_fundRaisingGoalAmount, s_fundingTime, nodeAccount2]
   );
+  console.log(encodedFunctionCall);
   const descriptionHash = ethers.utils.keccak256(
     ethers.utils.toUtf8Bytes(proposalDescription)
   );
@@ -40,6 +42,10 @@ async function queue_and_execute_afterSubmit() {
     await moveBlocks(1);
   }
 
+  projectId = await governor._getProjectId(args);
+  console.log(`Before ProjectID = ${projectId.toString()}`);
+  console.log(await governor._isApporoveFundingByDao(1));
+
   console.log("Executing...");
   const executeTx = await governor.execute(
     [fundProjectContract.address],
@@ -50,7 +56,7 @@ async function queue_and_execute_afterSubmit() {
   await executeTx.wait(1);
   console.log("Executed!");
 
-  let projectId = await governor._getProjectId(args);
+  projectId = await governor._getProjectId(args);
   console.log(`ProjectID = ${projectId.toString()}`);
   console.log(await governor._isApporoveFundingByDao(projectId));
 }

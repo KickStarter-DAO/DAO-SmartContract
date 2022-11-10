@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@chainlink/contracts/src/v0.8/AutomationCompatible.sol";
+import "hardhat/console.sol";
 
 error FundProject__NotApporovedByDao();
 error FundProject__UpkeepNeeded();
@@ -21,6 +22,7 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
     }
 
     uint256 public projectId = 1;
+    uint256 public k_projectId = 1;
 
     uint public lastTimeStamp;
     uint256 public daoPercentage;
@@ -32,13 +34,14 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
 
     mapping(string => uint256) public hashToProjectId;
     mapping(uint256 => string) public idToHash;
-    mapping(uint256 => mapping(address => uint256)) public funders;
+    mapping(uint256 => mapping(address => uint256)) public funders; // projectId => funderAddress => funderBalance
     mapping(uint256 => uint256) public projectFunds;
     mapping(uint256 => uint256) public projectFundingGoalAmount;
     mapping(uint256 => bool) public _isApporovedByDao;
     mapping(uint256 => address) public projectOwnerAddress;
     mapping(uint256 => ProjectFundingStatus) public _ProjectFundingStatus;
     mapping(address => bool) public _isEnteranceFeePaid;
+    mapping(address => uint256[]) public investedProjects; // investor address => investedProjects
 
     event projectSuccessfullyFunded(uint256 indexed _projectId);
     event projectFundingFailed(uint256 indexed _projectId);
@@ -64,6 +67,7 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
     {
         funders[_projecID][msg.sender] += msg.value;
         projectFunds[_projecID] += msg.value;
+        investedProjects[msg.sender] = [_projecID]; // need testing
     }
 
     function apporoveFundingByDao(
@@ -103,41 +107,48 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
         public
         view
         override
-        returns (
-            bool upkeepNeeded,
-            bytes memory /* performData */
-        )
+        returns (bool upkeepNeeded, bytes memory performData)
     {
-        upkeepNeeded = (_isFunding[projectId] &&
-            (block.timestamp - projectToTime[projectId][time[projectId]]) >
-            projectToTime[projectId][time[projectId]]);
+        for (uint i = 1; i <= projectId; i++) {
+            bool isFunded = _isFunding[i];
+
+            console.log("_isFunding= ", _isFunding[i], i);
+
+            bool timePassed = (block.timestamp - (projectToTime[i][time[i]])) >
+                time[i];
+            upkeepNeeded = (isFunded && timePassed);
+            if (upkeepNeeded) {
+                performData = abi.encodePacked(i);
+                console.log(uint256(bytes32(performData)));
+                break;
+            }
+        }
     }
 
-    function performUpkeep(
-        bytes calldata /* performData */
-    ) external override {
+    function performUpkeep(bytes calldata performData) external override {
         (bool upkeepNeeded, ) = checkUpkeep("");
         if (!upkeepNeeded) {
             revert FundProject__UpkeepNeeded();
         }
-        _isFunding[projectId] = false;
-        _isApporovedByDao[projectId] = false;
+        uint256 ProjectId = uint256(bytes32(performData));
+        _isFunding[ProjectId] = false;
+        _isApporovedByDao[ProjectId] = false;
 
-        if (projectFunds[projectId] > projectFundingGoalAmount[projectId]) {
-            _ProjectFundingStatus[projectId] = ProjectFundingStatus.SUCCESS;
-            uint256 fundsToSent = (projectFunds[projectId] * daoPercentage) /
+        if (projectFunds[ProjectId] > projectFundingGoalAmount[ProjectId]) {
+            _ProjectFundingStatus[ProjectId] = ProjectFundingStatus.SUCCESS;
+            uint256 fundsToSent = (projectFunds[ProjectId] * daoPercentage) /
                 100;
-            (bool success, ) = (projectOwnerAddress[projectId]).call{
+            (bool success, ) = (projectOwnerAddress[ProjectId]).call{
                 value: fundsToSent
             }("");
             if (!success) {
-                revert FundProject__TransferFailed(projectFunds[projectId]);
+                revert FundProject__TransferFailed(projectFunds[ProjectId]);
             }
 
-            emit projectSuccessfullyFunded(projectId);
+            emit projectSuccessfullyFunded(ProjectId);
         } else {
-            _ProjectFundingStatus[projectId] = ProjectFundingStatus.FAILED;
-            emit projectFundingFailed(projectId);
+            _ProjectFundingStatus[ProjectId] = ProjectFundingStatus.FAILED;
+            emit projectFundingFailed(ProjectId);
         }
     }
 
@@ -222,5 +233,34 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
 
     function isEnteranceFeePaid(address account) public view returns (bool) {
         return _isEnteranceFeePaid[account];
+    }
+
+    function getFunderBalance(uint256 _projectID)
+        public
+        view
+        returns (uint256)
+    {
+        return funders[_projectID][msg.sender];
+    }
+
+    function getInvestedProjects(address investor)
+        public
+        view
+        returns (uint256[] memory)
+    {
+        return investedProjects[investor]; // need testing
+    }
+
+    function getDaoPercentage() public view returns (uint256) {
+        return daoPercentage;
+    }
+
+    function getTimeleft(uint256 _projectID)
+        public
+        view
+        returns (uint256 a, uint256 b)
+    {
+        a = block.timestamp - projectToTime[_projectID][time[_projectID]];
+        b = time[_projectID];
     }
 }
