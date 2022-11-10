@@ -90,6 +90,7 @@ const fs = require("fs");
         const payFee = await governor.paySubmitFee({ value: enteranceFee });
         await payFee.wait(1);
 
+        assert(await governor.isEnteranceFeePaid(projectOwner));
         const proposalTx = await governor.propose(
           [governor.address],
           [0],
