@@ -25,6 +25,23 @@ async function vote() {
   await invTx.wait(1);
   console.log((await governor.getFunderBalance(investor)).toString());
   console.log((await governor._getBalanceOfProject(projectId)).toString());
+  await moveTime(s_fundingTime + 1);
+  await moveBlocks(1);
+
+  const tx = await governor.performUpkeep(
+    ethers.utils.hexZeroPad(ethers.utils.hexlify(projectId), 32)
+  );
+
+  console.log(
+    ` Project status: ${await governor._getProjectStatus(projectId)}`
+  );
+  console.log(
+    `Balance of project: ${(
+      await governor._getBalanceOfProject(projectId)
+    ).toString()}`
+  );
+
+  console.log((await provider.getBalance(account2node)).toString());
 }
 
 vote()

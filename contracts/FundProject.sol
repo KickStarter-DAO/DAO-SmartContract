@@ -113,13 +113,14 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
         returns (bool upkeepNeeded, bytes memory performData)
     {
         for (uint i = 1; i <= projectId; i++) {
-            bool isFunded = _isFunding[i];
-            bool timePassed = (block.timestamp - (projectToTime[i][time[i]])) >
-                time[i];
-            upkeepNeeded = (isFunded && timePassed);
-            if (upkeepNeeded) {
-                performData = abi.encodePacked(i);
-                break;
+            if (_isFunding[i]) {
+                bool timePassed = (block.timestamp -
+                    (projectToTime[i][time[i]])) > time[i];
+                upkeepNeeded = (timePassed);
+                if (upkeepNeeded) {
+                    performData = abi.encodePacked(i);
+                    break;
+                }
             }
         }
     }

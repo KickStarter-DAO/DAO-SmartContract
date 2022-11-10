@@ -23,7 +23,7 @@ FN:249,getInvestedProjects
 FN:257,getDaoPercentage
 FN:261,getTimeleft
 FNF:22
-FNH:17
+FNH:18
 FNDA:3,isApporovedByDao
 FNDA:3,constructor
 FNDA:3,fund
@@ -41,7 +41,7 @@ FNDA:0,_getFundingGoalAmount
 FNDA:3,is_funding
 FNDA:3,_getProjectStatus
 FNDA:9,getEnteranceFee
-FNDA:0,isEnteranceFeePaid
+FNDA:6,isEnteranceFeePaid
 FNDA:2,getFunderBalance
 FNDA:0,getInvestedProjects
 FNDA:1,getDaoPercentage
@@ -114,14 +114,14 @@ DA:218,0
 DA:222,3
 DA:230,3
 DA:234,9
-DA:238,0
+DA:238,6
 DA:246,2
 DA:254,0
 DA:258,1
 DA:266,0
 DA:267,0
 LF:74
-LH:61
+LH:62
 BRDA:55,1,0,0
 BRDA:55,1,1,3
 BRDA:83,2,0,0
