@@ -22,7 +22,6 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
     }
 
     uint256 public projectId = 1;
-    uint256 public k_projectId = 1;
 
     uint public lastTimeStamp;
     uint256 public daoPercentage;
@@ -47,6 +46,10 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
     event projectFundingFailed(uint256 indexed _projectId);
     event enteranceFeePaid(address indexed _projectOwner);
     event projectGoesToFunding(uint256 indexed _projectId);
+    event withdrawFundSuccessfully(
+        address indexed __investor,
+        uint256 indexed __projectId
+    );
 
     modifier isApporovedByDao(uint256 _projecID) {
         if (!_isApporovedByDao[_projecID])
@@ -111,15 +114,11 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
     {
         for (uint i = 1; i <= projectId; i++) {
             bool isFunded = _isFunding[i];
-
-            console.log("_isFunding= ", _isFunding[i], i);
-
             bool timePassed = (block.timestamp - (projectToTime[i][time[i]])) >
                 time[i];
             upkeepNeeded = (isFunded && timePassed);
             if (upkeepNeeded) {
                 performData = abi.encodePacked(i);
-                console.log(uint256(bytes32(performData)));
                 break;
             }
         }
@@ -130,6 +129,7 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
         if (!upkeepNeeded) {
             revert FundProject__UpkeepNeeded();
         }
+
         uint256 ProjectId = uint256(bytes32(performData));
         _isFunding[ProjectId] = false;
         _isApporovedByDao[ProjectId] = false;
@@ -138,6 +138,7 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
             _ProjectFundingStatus[ProjectId] = ProjectFundingStatus.SUCCESS;
             uint256 fundsToSent = (projectFunds[ProjectId] * daoPercentage) /
                 100;
+            projectFunds[ProjectId] = 0;
             (bool success, ) = (projectOwnerAddress[ProjectId]).call{
                 value: fundsToSent
             }("");
@@ -164,12 +165,14 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
     function withdrawFund(uint256 _projectID) public {
         if (_ProjectFundingStatus[_projectID] == ProjectFundingStatus.FAILED) {
             uint256 fundToSent = funders[_projectID][msg.sender];
+            funders[_projectID][msg.sender] = 0;
             (bool success, ) = (payable(msg.sender)).call{value: fundToSent}(
                 ""
             );
             if (!success) {
                 revert FundProject__WithdrawTransferFailed();
             }
+            emit withdrawFundSuccessfully(msg.sender, projectId);
         } else {
             revert FundProject__withdrawFund();
         }

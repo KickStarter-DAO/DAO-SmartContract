@@ -26,7 +26,9 @@ const fs = require("fs");
         proposalState,
         projectId,
         blockNumber,
+        deployer,
         investor;
+      const provider = ethers.getDefaultProvider();
       beforeEach(async () => {
         account1 = (await ethers.getSigners())[1];
         account2 = (await ethers.getSigners())[2];
@@ -68,8 +70,8 @@ const fs = require("fs");
 
         moveBlocks(1);
 
-        /*   const { upkeepNeeded } = await governor.checkUpkeep([]);
-        assert(!upkeepNeeded); */
+        const { upkeepNeeded } = await governor.checkUpkeep([]);
+        assert(!upkeepNeeded);
 
         await ethers.getContract("GovernanceToken", projectOwner);
         const args = "QmPwX1rNoYRmQAPDm8Dp7YSeFdxPKaczWaBu8NPgVpKufu";
@@ -208,20 +210,90 @@ const fs = require("fs");
       });
 
       describe("checkUpkeep", async () => {
-        it("return false if project hasnt submit", async () => {
-          blockNumber = await ethers.provider.getBlockNumber();
-          console.log(`Before ${blockNumber}`);
+        it("time has to pass to finish funding ", async () => {
+          const { upkeepNeeded1 } = await governor.checkUpkeep([]);
+          assert(!upkeepNeeded1);
           await moveTime(s_fundingTime + 1);
-          await moveBlocks(s_fundingTime + 1);
-          blockNumber = await ethers.provider.getBlockNumber();
-          console.log(`Before ${blockNumber}`);
+          await moveBlocks(1);
           const { upkeepNeeded, performData } = await governor.checkUpkeep([]);
-          const { a, b } = await governor.getTimeleft(projectId);
-          console.log(`ProjectId = ${projectId}`);
-          console.log(await governor.is_funding(projectId));
-          console.log(a.toString(), b.toString());
+          assert(upkeepNeeded);
           console.log(performData);
-          // assert(!upkeepNeeded);
+        });
+      });
+      describe("performUpKeep", () => {
+        it("only call perfomUpKeep when its time", async () => {
+          await expect(governor.performUpkeep([])).to.be.revertedWith(
+            "FundProject__UpkeepNeeded"
+          );
+
+          await moveTime(s_fundingTime + 1);
+          await moveBlocks(1);
+
+          const tx = await governor.performUpkeep([]);
+          assert(tx);
+        });
+
+        it("checking funding process", async () => {
+          const invest = ethers.utils.parseUnits("1", "ether");
+
+          await ethers.getContract("GovernerContract", investor);
+          const invTx = await governor.fund(projectId, { value: invest });
+
+          await invTx.wait(1);
+
+          assert.equal(
+            (await governor.getFunderBalance(projectId)).toString(),
+            invest.toString()
+          );
+
+          await moveTime(s_fundingTime + 1);
+          await moveBlocks(1);
+          await expect(
+            governor.performUpkeep(
+              ethers.utils.hexZeroPad(ethers.utils.hexlify(1), 32)
+            )
+          ).to.emit(governor, "projectSuccessfullyFunded");
+
+          assert.equal(await governor.is_funding(projectId), false);
+          assert.equal(
+            await governor._isApporoveFundingByDao(projectId),
+            false
+          );
+
+          assert.equal(await governor._getProjectStatus(projectId), "1");
+
+          assert.equal(
+            (await governor._getBalanceOfProject(projectId)).toString(),
+            "0"
+          );
+        });
+        it("Failed funding try to withdraw", async () => {
+          await ethers.getContract("GovernerContract", investor);
+          const beforeInvestBalance = await investor.getBalance();
+          console.log(beforeInvestBalance.toString());
+          const invTx = await governor.fund(projectId, { value: 100 });
+          await invTx.wait(1);
+          const afterInvestBalance = await investor.getBalance();
+          console.log(afterInvestBalance.toString());
+          await moveTime(s_fundingTime + 1);
+          await moveBlocks(1);
+
+          await expect(
+            governor.performUpkeep(
+              ethers.utils.hexZeroPad(ethers.utils.hexlify(1), 32)
+            )
+          ).to.emit(governor, "projectFundingFailed");
+
+          assert.equal(await governor.is_funding(projectId), false);
+          assert.equal(
+            await governor._isApporoveFundingByDao(projectId),
+            false
+          );
+          assert.equal(await governor._getProjectStatus(projectId), "2");
+          await expect(governor.withdrawFund(projectId)).to.emit(
+            governor,
+            "withdrawFundSuccessfully"
+          );
         });
       });
     });

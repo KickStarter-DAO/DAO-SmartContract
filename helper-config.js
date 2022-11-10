@@ -32,7 +32,7 @@ const s_website = "www.sampleProject.com";
 const s_description = "Amazing way to make money";
 const s_video =
   "https://www.youtube.com/watch?v=5abamRO41fE&list=RD5abamRO41fE&start_radio=1&ab_channel=Slipknot";
-const s_fundRaisingGoalAmount = 10000;
+const s_fundRaisingGoalAmount = 10000; // in wei
 const s_roadMap = "Just click the video";
 const s_otherSources = "You dont need anything else";
 const s_fundingTime = 60; // 10 sec.
