@@ -20,24 +20,24 @@
     </h1>
     <div class='clearfix'>
       <div class='fl pad1y space-right2'>
-        <span class="strong">89.06% </span>
+        <span class="strong">87.88% </span>
         <span class="quiet">Statements</span>
-        <span class='fraction'>57/64</span>
+        <span class='fraction'>58/66</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">72.22% </span>
+        <span class="strong">75% </span>
         <span class="quiet">Branches</span>
-        <span class='fraction'>13/18</span>
+        <span class='fraction'>15/20</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">81.82% </span>
+        <span class="strong">78.26% </span>
         <span class="quiet">Functions</span>
-        <span class='fraction'>18/22</span>
+        <span class='fraction'>18/23</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">83.78% </span>
+        <span class="strong">82.89% </span>
         <span class="quiet">Lines</span>
-        <span class='fraction'>62/74</span>
+        <span class='fraction'>63/76</span>
       </div>
     </div>
   </div>
@@ -312,7 +312,22 @@
 267
 268
 269
-270</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+270
+271
+272
+273
+274
+275
+276
+277
+278
+279
+280
+281
+282
+283
+284</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -395,6 +410,10 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">7×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">7×</span>
@@ -404,6 +423,8 @@
 <span class="cline-any cline-yes">7×</span>
 <span class="cline-any cline-yes">7×</span>
 <span class="cline-any cline-yes">7×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">7×</span>
 <span class="cline-any cline-yes">7×</span>
 <span class="cline-any cline-yes">7×</span>
@@ -428,12 +449,14 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">12×</span>
 <span class="cline-any cline-yes">14×</span>
-<span class="cline-any cline-yes">14×</span>
+<span class="cline-any cline-yes">6×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">14×</span>
-<span class="cline-any cline-yes">14×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6×</span>
+<span class="cline-any cline-yes">6×</span>
 <span class="cline-any cline-yes">4×</span>
 <span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -471,6 +494,7 @@
 <span class="cline-any cline-yes">8×</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8×</span>
 <span class="cline-any cline-yes">8×</span>
 <span class="cline-any cline-yes">8×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -549,7 +573,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">6×</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -579,6 +603,10 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// SPDX-License-Identifier: MIT
@@ -624,6 +652,7 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
     mapping(uint256 =&gt; ProjectFundingStatus) public _ProjectFundingStatus;
     mapping(address =&gt; bool) public _isEnteranceFeePaid;
     mapping(address =&gt; uint256[]) public investedProjects; // investor address =&gt; investedProjects
+    mapping(uint256 =&gt; address) public projectOwnerAddressIndex;
 &nbsp;
     event projectSuccessfullyFunded(uint256 indexed _projectId);
     event projectFundingFailed(uint256 indexed _projectId);
@@ -660,10 +689,14 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
         string memory _ipfsHash,
         uint256 _fundingGoalAmount,
         uint256 _time,
-        address _projectOwnerAddress
+        uint256 _projectOwnerAddressIndex
     ) external onlyOwner {
         // only dao can call it
-        <span class="missing-if-branch" title="if path not taken" >I</span>if (!_isEnteranceFeePaid[_projectOwnerAddress]) {
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (
+            !_isEnteranceFeePaid[
+                projectOwnerAddressIndex[_projectOwnerAddressIndex]
+            ]
+        ) {
             revert FundProject__EnteranceFeeNeeded();
         } else {
             projectToTime[projectId][_time] = block.timestamp;
@@ -672,7 +705,9 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
             projectFundingGoalAmount[projectId] = _fundingGoalAmount;
             hashToProjectId[_ipfsHash] = projectId;
             idToHash[projectId] = _ipfsHash;
-            projectOwnerAddress[projectId] = _projectOwnerAddress;
+            projectOwnerAddress[projectId] = projectOwnerAddressIndex[
+                _projectOwnerAddressIndex
+            ];
             _isApporovedByDao[projectId] = true;
             _isFunding[projectId] = true;
             emit projectGoesToFunding(projectId);
@@ -695,14 +730,16 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
         override
         returns (bool upkeepNeeded, bytes memory performData)
     {
-        for (uint i = 1; i &lt;= projectId; i++) {
-            bool isFunded = _isFunding[i];
-            bool timePassed = (block.timestamp - (projectToTime[i][time[i]])) &gt;
-                time[i];
-            upkeepNeeded = (isFunded &amp;&amp; timePassed);
-            if (upkeepNeeded) {
-                performData = abi.encodePacked(i);
-                break;
+        for (uint projectIndex = 1; projectIndex &lt;= projectId; projectIndex++) {
+            if (_isFunding[projectIndex]) {
+                bool timePassed = (block.timestamp -
+                    (projectToTime[projectIndex][time[projectIndex]])) &gt;
+                    time[projectIndex];
+                upkeepNeeded = (timePassed);
+                if (upkeepNeeded) {
+                    performData = abi.encodePacked(projectIndex);
+                    break;
+                }
             }
         }
     }
@@ -719,8 +756,8 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
 &nbsp;
         if (projectFunds[ProjectId] &gt; projectFundingGoalAmount[ProjectId]) {
             _ProjectFundingStatus[ProjectId] = ProjectFundingStatus.SUCCESS;
-            uint256 fundsToSent = (projectFunds[ProjectId] * daoPercentage) /
-                100;
+            uint256 fundsToSent = (projectFunds[ProjectId] *
+                (100 - daoPercentage)) / 100;
             projectFunds[ProjectId] = 0;
             (bool success, ) = (projectOwnerAddress[ProjectId]).call{
                 value: fundsToSent
@@ -741,6 +778,7 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
             revert FundProject__NotEnoughPayment();
         } else {
             _isEnteranceFeePaid[msg.sender] = true;
+            projectOwnerAddressIndex[projectId] = msg.sender;
             emit enteranceFeePaid(msg.sender);
         }
     }
@@ -817,8 +855,8 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
         return enteranceFee;
     }
 &nbsp;
-    function isEnteranceFeePaid(address account) public view returns (bool) {
-        return _isEnteranceFeePaid[account];
+<span class="fstat-no" title="function not covered" >    function isEnteranceFeePaid(address account) public view returns (bool) {</span>
+<span class="cstat-no" title="statement not covered" >        return _isEnteranceFeePaid[account];</span>
     }
 &nbsp;
     function getFunderBalance(uint256 _projectID)
@@ -849,6 +887,10 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
 <span class="cstat-no" title="statement not covered" >        a = block.timestamp - projectToTime[_projectID][time[_projectID]]</span>;
 <span class="cstat-no" title="statement not covered" >        b = time[_projectID]</span>;
     }
+&nbsp;
+    function getCurrentProjectId() public view returns (uint256) {
+        return projectId;
+    }
 }
 &nbsp;</pre></td></tr>
 </table></pre>
@@ -856,7 +898,7 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Thu Nov 10 2022 18:08:59 GMT+0300 (GMT+03:00)
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Sun Nov 13 2022 21:54:01 GMT+0300 (GMT+03:00)
 </div>
 </div>
 <script src="../prettify.js"></script>

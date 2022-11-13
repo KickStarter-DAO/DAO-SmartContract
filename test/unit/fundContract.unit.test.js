@@ -21,6 +21,7 @@ const fs = require("fs");
         account2,
         account3,
         projectOwner,
+        projectOwnerIndex,
         governor,
         timeLock,
         proposalState,
@@ -36,7 +37,6 @@ const fs = require("fs");
         projectOwner = (await ethers.getSigners())[4];
         investor = (await ethers.getSigners())[5];
         deployer = (await getNamedAccounts()).deployer;
-        projectOwner = deployer;
 
         await deployments.fixture("all");
         gtToken = await ethers.getContract("GovernanceToken");
@@ -73,25 +73,26 @@ const fs = require("fs");
         const { upkeepNeeded } = await governor.checkUpkeep([]);
         assert(!upkeepNeeded);
 
-        await ethers.getContract("GovernanceToken", projectOwner);
+        const projectOwnerConnect = governor.connect(projectOwner);
         const args = "QmPwX1rNoYRmQAPDm8Dp7YSeFdxPKaczWaBu8NPgVpKufu";
+        projectOwnerIndex = await projectOwnerConnect.getCurrentProjectId();
 
-        const encodedFunctionCall = governor.interface.encodeFunctionData(
-          FUNC_FUND,
-          [args, s_fundRaisingGoalAmount, s_fundingTime, projectOwner]
-        );
+        const encodedFunctionCall =
+          projectOwnerConnect.interface.encodeFunctionData(FUNC_FUND, [
+            args,
+            s_fundRaisingGoalAmount,
+            s_fundingTime,
+            projectOwnerIndex,
+          ]);
 
-        const enteranceFee = await governor.getEnteranceFee();
+        const enteranceFee = await projectOwnerConnect.getEnteranceFee();
 
-        await expect(
-          governor.propose([governor.address], [0], [encodedFunctionCall], args)
-        ).to.be.revertedWith("GovernerContract__NeedEnteranceFee");
-
-        const payFee = await governor.paySubmitFee({ value: enteranceFee });
+        const payFee = await projectOwnerConnect.paySubmitFee({
+          value: enteranceFee,
+        });
         await payFee.wait(1);
 
-        assert(await governor.isEnteranceFeePaid(projectOwner));
-        const proposalTx = await governor.propose(
+        const proposalTx = await projectOwnerConnect.propose(
           [governor.address],
           [0],
           [encodedFunctionCall],
@@ -173,13 +174,18 @@ const fs = require("fs");
         assert(await governor._isApporoveFundingByDao(projectId));
         const invest = ethers.utils.parseUnits("1", "ether");
 
-        await ethers.getContract("GovernerContract", investor);
-        const invTx = await governor.fund(projectId, { value: invest });
+        const investorConnectContract = governor.connect(investor);
+
+        const invTx = await investorConnectContract.fund(projectId, {
+          value: invest,
+        });
         expect().to.emit(governor, "enteranceFeePaid");
         await invTx.wait(1);
 
         assert.equal(
-          (await governor.getFunderBalance(projectId)).toString(),
+          (
+            await investorConnectContract.getFunderBalance(projectId)
+          ).toString(),
           invest.toString()
         );
 
@@ -235,15 +241,43 @@ const fs = require("fs");
         });
 
         it("checking funding process", async () => {
-          const invest = ethers.utils.parseUnits("1", "ether");
+          const invest = ethers.utils.parseUnits("10", "ether");
+          const projectOwnerConnect = await governor.connect(projectOwner);
+          const projectOwnerBalanceBefore =
+            await projectOwnerConnect.provider.getBalance(projectOwner.address);
+          console.log(
+            ethers.utils.formatEther(projectOwnerBalanceBefore).toString()
+          );
 
-          await ethers.getContract("GovernerContract", investor);
-          const invTx = await governor.fund(projectId, { value: invest });
+          const investorConnectContract = await governor.connect(investor);
+          console.log(
+            ` investorBalanceBefore = ${ethers.utils
+              .formatEther(
+                await investorConnectContract.provider.getBalance(
+                  investor.address
+                )
+              )
+              .toString()}`
+          );
+          const invTx = await investorConnectContract.fund(projectId, {
+            value: invest,
+          });
 
           await invTx.wait(1);
+          console.log(
+            ` investorBalanceAfter = ${ethers.utils
+              .formatEther(
+                await investorConnectContract.provider.getBalance(
+                  investor.address
+                )
+              )
+              .toString()}`
+          );
 
           assert.equal(
-            (await governor.getFunderBalance(projectId)).toString(),
+            (
+              await investorConnectContract.getFunderBalance(projectId)
+            ).toString(),
             invest.toString()
           );
 
@@ -254,6 +288,12 @@ const fs = require("fs");
               ethers.utils.hexZeroPad(ethers.utils.hexlify(1), 32)
             )
           ).to.emit(governor, "projectSuccessfullyFunded");
+
+          const projectOwnerBalanceAfter =
+            await projectOwnerConnect.provider.getBalance(projectOwner.address);
+          console.log(
+            ethers.utils.formatEther(projectOwnerBalanceAfter).toString()
+          );
 
           assert.equal(await governor.is_funding(projectId), false);
           assert.equal(

@@ -21,19 +21,22 @@ const fs = require("fs");
         account1,
         account2,
         account3,
-        projectOwner,
+        projectOwnerIndex,
         governor,
         timeLock,
         fund,
-        blockNumber;
+        blockNumber,
+        projectOwner;
+
       beforeEach(async function () {
         account1 = (await ethers.getSigners())[1];
         account2 = (await ethers.getSigners())[2];
         account3 = (await ethers.getSigners())[3];
         projectOwner = (await ethers.getSigners())[4];
         deployer = (await getNamedAccounts()).deployer;
-        projectOwner = deployer;
+
         await deployments.fixture("all");
+
         gtToken = await ethers.getContract("GovernanceToken");
         governor = await ethers.getContract("GovernerContract");
         timeLock = await ethers.getContract("TimeLock");
@@ -126,31 +129,46 @@ const fs = require("fs");
               blockNumber - 1
             )}`
           );
-          const letsTry = await ethers.getContract(
-            "GovernanceToken",
-            projectOwner
-          );
+          const projectOwnerConnectContract = governor.connect(projectOwner);
+
+          const enteranceFee =
+            await projectOwnerConnectContract.getEnteranceFee();
+          projectOwnerIndex =
+            await projectOwnerConnectContract.getCurrentProjectId();
           const args = "QmPwX1rNoYRmQAPDm8Dp7YSeFdxPKaczWaBu8NPgVpKufu";
-          const encodedFunctionCall = governor.interface.encodeFunctionData(
-            FUNC_FUND,
-            [args, s_fundRaisingGoalAmount, s_fundingTime, projectOwner]
-          );
-
-          const enteranceFee = await governor.getEnteranceFee();
-
           await expect(
             governor.propose(
               [governor.address],
               [0],
-              [encodedFunctionCall],
+              [
+                projectOwnerConnectContract.interface.encodeFunctionData(
+                  FUNC_FUND,
+                  [
+                    args,
+                    s_fundRaisingGoalAmount,
+                    s_fundingTime,
+                    projectOwnerIndex,
+                  ]
+                ),
+              ],
               args
             )
           ).to.be.revertedWith(`GovernerContract__NeedEnteranceFee`);
 
-          const payFee = await governor.paySubmitFee({ value: enteranceFee });
+          const payFee = await projectOwnerConnectContract.paySubmitFee({
+            value: enteranceFee,
+          });
           await payFee.wait(1);
+          projectOwnerIndex =
+            await projectOwnerConnectContract.getCurrentProjectId();
 
-          const proposalTx = await governor.propose(
+          const encodedFunctionCall =
+            projectOwnerConnectContract.interface.encodeFunctionData(
+              FUNC_FUND,
+              [args, s_fundRaisingGoalAmount, s_fundingTime, projectOwnerIndex]
+            );
+
+          const proposalTx = await projectOwnerConnectContract.propose(
             [governor.address],
             [0],
             [encodedFunctionCall],
@@ -341,29 +359,32 @@ const fs = require("fs");
 
           blockNumber = await ethers.provider.getBlockNumber();
 
-          const letsTry = await ethers.getContract(
-            "GovernanceToken",
-            projectOwner
-          );
-          const args = "QmPwX1rNoYRmQAPDm8Dp7YSeFdxPKaczWaBu8NPgVpKufu";
-          const encodedFunctionCall = governor.interface.encodeFunctionData(
-            FUNC_FUND,
-            [args, s_fundRaisingGoalAmount, s_fundingTime, projectOwner]
-          );
-
           const enteranceFee = await governor.getEnteranceFee();
-
+          projectOwnerIndex = await governor.getCurrentProjectId();
+          const args = "QmPwX1rNoYRmQAPDm8Dp7YSeFdxPKaczWaBu8NPgVpKufu";
           await expect(
             governor.propose(
               [governor.address],
               [0],
-              [encodedFunctionCall],
+              [
+                governor.interface.encodeFunctionData(FUNC_FUND, [
+                  args,
+                  s_fundRaisingGoalAmount,
+                  s_fundingTime,
+                  projectOwnerIndex,
+                ]),
+              ],
               args
             )
           ).to.be.revertedWith(`GovernerContract__NeedEnteranceFee`);
 
           const payFee = await governor.paySubmitFee({ value: enteranceFee });
           await payFee.wait(1);
+
+          const encodedFunctionCall = governor.interface.encodeFunctionData(
+            FUNC_FUND,
+            [args, s_fundRaisingGoalAmount, s_fundingTime, projectOwnerIndex]
+          );
 
           const proposalTx = await governor.propose(
             [governor.address],

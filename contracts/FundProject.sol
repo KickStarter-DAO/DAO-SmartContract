@@ -41,6 +41,7 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
     mapping(uint256 => ProjectFundingStatus) public _ProjectFundingStatus;
     mapping(address => bool) public _isEnteranceFeePaid;
     mapping(address => uint256[]) public investedProjects; // investor address => investedProjects
+    mapping(uint256 => address) public projectOwnerAddressIndex;
 
     event projectSuccessfullyFunded(uint256 indexed _projectId);
     event projectFundingFailed(uint256 indexed _projectId);
@@ -77,10 +78,14 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
         string memory _ipfsHash,
         uint256 _fundingGoalAmount,
         uint256 _time,
-        address _projectOwnerAddress
+        uint256 _projectOwnerAddressIndex
     ) external onlyOwner {
         // only dao can call it
-        if (!_isEnteranceFeePaid[_projectOwnerAddress]) {
+        if (
+            !_isEnteranceFeePaid[
+                projectOwnerAddressIndex[_projectOwnerAddressIndex]
+            ]
+        ) {
             revert FundProject__EnteranceFeeNeeded();
         } else {
             projectToTime[projectId][_time] = block.timestamp;
@@ -89,7 +94,9 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
             projectFundingGoalAmount[projectId] = _fundingGoalAmount;
             hashToProjectId[_ipfsHash] = projectId;
             idToHash[projectId] = _ipfsHash;
-            projectOwnerAddress[projectId] = _projectOwnerAddress;
+            projectOwnerAddress[projectId] = projectOwnerAddressIndex[
+                _projectOwnerAddressIndex
+            ];
             _isApporovedByDao[projectId] = true;
             _isFunding[projectId] = true;
             emit projectGoesToFunding(projectId);
@@ -112,13 +119,14 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
         override
         returns (bool upkeepNeeded, bytes memory performData)
     {
-        for (uint i = 1; i <= projectId; i++) {
-            if (_isFunding[i]) {
+        for (uint projectIndex = 1; projectIndex <= projectId; projectIndex++) {
+            if (_isFunding[projectIndex]) {
                 bool timePassed = (block.timestamp -
-                    (projectToTime[i][time[i]])) > time[i];
+                    (projectToTime[projectIndex][time[projectIndex]])) >
+                    time[projectIndex];
                 upkeepNeeded = (timePassed);
                 if (upkeepNeeded) {
-                    performData = abi.encodePacked(i);
+                    performData = abi.encodePacked(projectIndex);
                     break;
                 }
             }
@@ -137,8 +145,8 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
 
         if (projectFunds[ProjectId] > projectFundingGoalAmount[ProjectId]) {
             _ProjectFundingStatus[ProjectId] = ProjectFundingStatus.SUCCESS;
-            uint256 fundsToSent = (projectFunds[ProjectId] * daoPercentage) /
-                100;
+            uint256 fundsToSent = (projectFunds[ProjectId] *
+                (100 - daoPercentage)) / 100;
             projectFunds[ProjectId] = 0;
             (bool success, ) = (projectOwnerAddress[ProjectId]).call{
                 value: fundsToSent
@@ -159,6 +167,7 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
             revert FundProject__NotEnoughPayment();
         } else {
             _isEnteranceFeePaid[msg.sender] = true;
+            projectOwnerAddressIndex[projectId] = msg.sender;
             emit enteranceFeePaid(msg.sender);
         }
     }
@@ -266,5 +275,9 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
     {
         a = block.timestamp - projectToTime[_projectID][time[_projectID]];
         b = time[_projectID];
+    }
+
+    function getCurrentProjectId() public view returns (uint256) {
+        return projectId;
     }
 }

@@ -17,7 +17,7 @@ const developmentChains = ["hardhat", "localhost"];
 const INITIAL_SUPPLY = "1000000000000000000000000";
 const MIN_DELAY = 0;
 const VOTING_DELAY = 0;
-const VOTING_PERIOD = 200;
+const VOTING_PERIOD = 50;
 const QUORUM_PERCENTAGE = 0;
 const ADDRESS_ZERO = "0x0000000000000000000000000000000000000000";
 const NEW_VALUE = 77;
@@ -35,7 +35,7 @@ const s_video =
 const s_fundRaisingGoalAmount = 10000; // in wei
 const s_roadMap = "Just click the video";
 const s_otherSources = "You dont need anything else";
-const s_fundingTime = 60; // 10 sec.
+const s_fundingTime = 120; // 10 sec.
 
 module.exports = {
   developmentChains,
