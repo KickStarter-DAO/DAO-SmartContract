@@ -24,6 +24,7 @@ developmentChains.includes(network.name)
 
       beforeEach(async () => {
         deployer = (await getNamedAccounts()).deployer;
+        deployer = await ethers.getSigner(deployer);
         projectOwner = await ethers.getSigner(
           (
             await getNamedAccounts()
@@ -55,7 +56,7 @@ developmentChains.includes(network.name)
       });
       describe("submit a project", () => {
         it("submitting", async () => {
-          const args = "QmeqcGRJSAUJecnyHNUbxg53YPErLodFnvuNq92qAhVMQQ";
+          const args = "QmeqcGRJSAUJecnyHNUbxg53YPErLodFnvuNq92qAhVMAQ";
           const projectOwnerConnectContract = await governor.connect(
             projectOwner
           );
@@ -89,21 +90,21 @@ developmentChains.includes(network.name)
         it("Make the vote!", async () => {
           const voter2ConnectTokenContract = governor.connect(voter2);
           let txCastVote = await voter2ConnectTokenContract.castVote(
-            "33305536448279361826260693304629530695162329813830343837048230642993916376403",
+            "14094970548360658432981678952890731821083177440208283154284427752347616310142",
             1
           );
           await txCastVote.wait(1);
 
           const voter3ConnectTokenContract = governor.connect(voter3);
           txCastVote = await voter3ConnectTokenContract.castVote(
-            "33305536448279361826260693304629530695162329813830343837048230642993916376403",
+            "14094970548360658432981678952890731821083177440208283154284427752347616310142",
             0
           );
           await txCastVote.wait(1);
 
           const deployerConnectTokenContract = governor.connect(deployer);
           txCastVote = await deployerConnectTokenContract.castVote(
-            "33305536448279361826260693304629530695162329813830343837048230642993916376403",
+            "14094970548360658432981678952890731821083177440208283154284427752347616310142",
             1
           );
           await txCastVote.wait(1);
@@ -115,7 +116,7 @@ developmentChains.includes(network.name)
           projectOwnerIndex =
             await projectOwnerConnectContract.getCurrentProjectId();
 
-          const args = "QmeqcGRJSAUJecnyHNUbxg53YPErLodFnvuNq92qAhVMQQ";
+          const args = "QmeqcGRJSAUJecnyHNUbxg53YPErLodFnvuNq92qAhVMAQ";
           const descriptionHash = ethers.utils.keccak256(
             ethers.utils.toUtf8Bytes(args)
           );
@@ -147,6 +148,34 @@ developmentChains.includes(network.name)
           console.log("Executed!");
 
           projectId = await governor._getProjectId(args);
+        });
+
+        it("Lets fund!", async () => {
+          const invest = ethers.utils.parseUnits("0.1", "ether");
+          const investorConnectContract = await governor.connect(deployer);
+          console.log(
+            ` investorBalanceBefore = ${ethers.utils
+              .formatEther(
+                await investorConnectContract.provider.getBalance(
+                  deployer.address
+                )
+              )
+              .toString()}`
+          );
+
+          const invTx = await investorConnectContract.fund(2, {
+            value: invest,
+          });
+          await invTx.wait(1);
+          console.log(
+            ` investorBalanceAfter = ${ethers.utils
+              .formatEther(
+                await investorConnectContract.provider.getBalance(
+                  deployer.address
+                )
+              )
+              .toString()}`
+          );
         });
       });
 
