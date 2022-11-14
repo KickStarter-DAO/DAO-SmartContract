@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
-contract DAOMember{
-
+contract DAOMember {
     address Owner;
     uint16 Timelock;
     uint256 INITIALTIME;
@@ -10,6 +9,7 @@ contract DAOMember{
 
     event LogWithrawReward(address[] indexed DAOMember, uint reward);
     event RemoveDaoMember(address indexed Daomember);
+    event Getreward(address indexed Owner,uint amount, uint time);
 
     constructor(address[] memory _daoMember, uint16 _TimeLock){
         Owner=msg.sender;
@@ -50,15 +50,15 @@ contract DAOMember{
                 DAOMEMBER.pop();
                 break;
             }
-
         }
         emit RemoveDaoMember(_doaMember);
     }
 
     //set _newTimeLock for next reward withdraw
-    function WithrawReward(uint16 _newTimeLock) public OnlyDAOOwner{
+    function DestibuteReward(uint16 _newTimeLock) public OnlyDAOOwner{
         require(block.timestamp-INITIALTIME>Timelock,"timelock isn't over");
         uint NoOfDAOMember=DAOMEMBER.length+1;
+        // 
         uint reward=address(this).balance/NoOfDAOMember;
         for (uint i; i<DAOMEMBER.length;++i){
             payable (DAOMEMBER[i]).transfer(reward);
@@ -73,9 +73,10 @@ contract DAOMember{
         return DAOMEMBER;
     }
 
-    receive() external payable {}
+    receive () external payable {
+        emit Getreward(msg.sender, msg.value, block.timestamp);
+    }
 
 
 
 }
-
