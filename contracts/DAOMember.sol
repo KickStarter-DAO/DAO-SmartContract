@@ -9,6 +9,8 @@ contract DAOMember{
     mapping(address=>bool) public isDAOMember;
 
     event LogWithrawReward(address[] indexed DAOMember, uint reward);
+    event RemoveDaoMember(address indexed Daomember);
+
     constructor(address[] memory _daoMember, uint16 _TimeLock){
         Owner=msg.sender;
         INITIALTIME=block.timestamp;
@@ -35,6 +37,22 @@ contract DAOMember{
         isDAOMember[_newDAOMember]=true;
         DAOMEMBER.push(_newDAOMember);
 
+    }
+
+
+    function RemoveDAOMember(address _doaMember) internal OnlyDAOOwner{
+        require(isDAOMember[ _doaMember], "you are not dao member");
+        uint NoOfMember=DAOMEMBER.length;
+        for (uint i ; i<NoOfMember;++i){
+            if (DAOMEMBER[i]==_doaMember){
+                isDAOMember[ _doaMember]=false;
+                DAOMEMBER[i]=DAOMEMBER[NoOfMember-1];
+                DAOMEMBER.pop();
+                break;
+            }
+
+        }
+        emit RemoveDaoMember(_doaMember);
     }
 
     //set _newTimeLock for next reward withdraw
