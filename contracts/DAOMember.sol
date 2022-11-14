@@ -50,6 +50,11 @@ contract DAOMember{
         emit LogWithrawReward(DAOMEMBER,reward);
     }
 
+
+    function getDAOMember() public view returns(address[] memory){
+        return DAOMEMBER;
+    }
+
     receive() external payable {}
 
 
