@@ -1,0 +1,58 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.4;
+contract DAOMember{
+
+    address Owner;
+    uint16 Timelock;
+    uint256 INITIALTIME;
+    address [] DAOMEMBER;
+    mapping(address=>bool) public isDAOMember;
+
+    event LogWithrawReward(address[] indexed DAOMember, uint reward);
+    constructor(address[] memory _daoMember, uint16 _TimeLock){
+        Owner=msg.sender;
+        INITIALTIME=block.timestamp;
+        Timelock=_TimeLock;
+        for(uint i; i< _daoMember.length; ++i) {
+            address daoMember = _daoMember[i];
+            require(daoMember!= address(0), "invalid owner");
+            require(!isDAOMember[daoMember], "owner is not unique");
+
+            isDAOMember[daoMember]=true;
+            DAOMEMBER.push(daoMember);
+        }
+    }
+
+    modifier OnlyDAOOwner () {
+        require (msg.sender==Owner);
+        _;
+    }
+
+
+    function AddDAOMember(address  _newDAOMember) public OnlyDAOOwner {
+        require( _newDAOMember!= address(0), "invalid owner");
+        require(!isDAOMember[ _newDAOMember], "owner is not unique");
+        isDAOMember[_newDAOMember]=true;
+        DAOMEMBER.push(_newDAOMember);
+
+    }
+
+    //set _newTimeLock for next reward withdraw
+    function WithrawReward(uint16 _newTimeLock) public OnlyDAOOwner{
+        require(block.timestamp-INITIALTIME>Timelock,"timelock isn't over");
+        uint NoOfDAOMember=DAOMEMBER.length+1;
+        uint reward=address(this).balance/NoOfDAOMember;
+        for (uint i; i<DAOMEMBER.length;++i){
+            payable (DAOMEMBER[i]).transfer(reward);
+        }
+        INITIALTIME=block.timestamp;
+        Timelock=_newTimeLock;
+        emit LogWithrawReward(DAOMEMBER,reward);
+    }
+
+    receive() external payable {}
+
+
+
+}
+
