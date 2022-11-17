@@ -40,7 +40,7 @@ const s_video =
 const s_fundRaisingGoalAmount = 10000; // in wei
 const s_roadMap = "Just click the video";
 const s_otherSources = "You dont need anything else";
-const s_fundingTime = 120; // 10 sec.
+const s_fundingTime = 86400; // 10 sec.
 
 module.exports = {
   developmentChains,

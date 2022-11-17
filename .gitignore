@@ -9,3 +9,5 @@ submit.js
 readOnlyMe.md
 coverage
 deployments
+queue-and-execute.js
+propose.js

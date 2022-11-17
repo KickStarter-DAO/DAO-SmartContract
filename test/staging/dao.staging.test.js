@@ -38,35 +38,20 @@ developmentChains.includes(network.name)
       });
       describe("make a propose to fund a project", () => {
         it("works with live chainlink keepers get to proposal to fund the project", async () => {
-          await new Promise(async (resolve, reject) => {
-            // listen for WinnerPicked event
-            governor.once("projectGoesToFunding", async () => {
-              console.log("projectGoesToFunding event fired!");
-              try {
-                // put assert here
+          console.log("Submitting...");
+          const args = "QmeqcGRJSAUJecnyHNUbxg53YPErLodFnvuNq82qAAALLW";
 
-                resolve();
-              } catch (error) {
-                console.log(error);
-                reject(error);
-              }
-            });
-          });
-        });
-      });
-      describe("submit a project", () => {
-        it("submitting", async () => {
-          const args = "QmeqcGRJSAUJecnyHNUbxg53YPErLodFnvuNq92qAhVLLQ";
           const projectOwnerConnectContract = await governor.connect(
             projectOwner
           );
-
+          console.log("Paying submit fee...");
           const enteranceFee =
             await projectOwnerConnectContract.getEnteranceFee();
           const payFee = await projectOwnerConnectContract.paySubmitFee({
             value: enteranceFee,
           });
           await payFee.wait(1);
+          console.log("Submit fee paid!");
           projectOwnerIndex =
             await projectOwnerConnectContract.getCurrentProjectId();
 
@@ -75,7 +60,7 @@ developmentChains.includes(network.name)
               FUNC_FUND,
               [args, s_fundRaisingGoalAmount, s_fundingTime, projectOwnerIndex]
             );
-
+          console.log("Proposing...");
           const proposalTx = await projectOwnerConnectContract.propose(
             [governor.address],
             [0],
@@ -84,27 +69,32 @@ developmentChains.includes(network.name)
           );
           const proposeReceipt = await proposalTx.wait(1);
           const proposalId = proposeReceipt.events[0].args.proposalId;
-          console.log(proposalId.toString());
-        });
+          console.log("Proposed!");
+          console.log(`Propoasal Id: ${proposalId.toString()}`);
 
+          const proposalDeadLine = await governor.proposalDeadline(proposalId);
+          console.log(`proposalDeadLine Id: ${proposalDeadLine.toString()}`);
+        });
+      });
+      describe("make vote,queue and execute", () => {
         it("Make the vote!", async () => {
           const voter2ConnectTokenContract = governor.connect(voter2);
           let txCastVote = await voter2ConnectTokenContract.castVote(
-            "56356127963133137284153767860446917474770664449431303765214938038603641261463",
+            "25642064417695780697194357454208262799831375866508686635461989984084662075539",
             1
           );
           await txCastVote.wait(1);
 
           const voter3ConnectTokenContract = governor.connect(voter3);
           txCastVote = await voter3ConnectTokenContract.castVote(
-            "56356127963133137284153767860446917474770664449431303765214938038603641261463",
+            "25642064417695780697194357454208262799831375866508686635461989984084662075539",
             0
           );
           await txCastVote.wait(1);
 
           const deployerConnectTokenContract = governor.connect(deployer);
           txCastVote = await deployerConnectTokenContract.castVote(
-            "56356127963133137284153767860446917474770664449431303765214938038603641261463",
+            "25642064417695780697194357454208262799831375866508686635461989984084662075539",
             1
           );
           await txCastVote.wait(1);
@@ -116,7 +106,7 @@ developmentChains.includes(network.name)
           projectOwnerIndex =
             await projectOwnerConnectContract.getCurrentProjectId();
 
-          const args = "QmeqcGRJSAUJecnyHNUbxg53YPErLodFnvuNq92qAhVLLQ";
+          const args = "QmWecuZF73W4Qm7D7hvR5fWU83s9kn9QjWfmGd9tuDevLn";
           const descriptionHash = ethers.utils.keccak256(
             ethers.utils.toUtf8Bytes(args)
           );
@@ -124,6 +114,7 @@ developmentChains.includes(network.name)
             FUNC_FUND,
             [args, s_fundRaisingGoalAmount, s_fundingTime, projectOwnerIndex]
           );
+
           governor = await ethers.getContract("GovernerContract", deployer);
           console.log("Queueing...");
           const queueTx = await governor.queue(
