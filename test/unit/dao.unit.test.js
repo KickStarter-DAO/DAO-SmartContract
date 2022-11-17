@@ -495,11 +495,11 @@ const fs = require("fs");
         });
         it("Name is correct", async () => {
           const tokenName = (await gtToken.name()).toString();
-          assert.equal(tokenName, "GovernanceToken");
+          assert.equal(tokenName, "QuickfundDAOToken");
         });
         it("Symbol is correct", async () => {
           const tokenSymbol = (await gtToken.symbol()).toString();
-          assert.equal(tokenSymbol, "GT");
+          assert.equal(tokenSymbol, "QFD");
         });
       });
       describe("tranfers", async () => {

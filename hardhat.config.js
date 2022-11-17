@@ -6,6 +6,7 @@ require("hardhat-gas-reporter");
 require("dotenv").config();
 
 const GOERLI_RPC_URL = process.env.GOERLI_RPC_URL;
+const MUMBAI_RPC_URL = process.env.MUMBAI_RPC_URL;
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
 const PRIVATE_KEY_PROJECT_OWNER = process.env.PRIVATE_KEY_PROJECT_OWNER;
 const PRIVATE_KEY_PROJECT_ACCOUNT2 = process.env.PRIVATE_KEY_PROJECT_ACCOUNT2;
@@ -36,6 +37,18 @@ module.exports = {
       chainId: 5,
       blockConfirmations: 6,
     },
+
+    mumbai: {
+      url: MUMBAI_RPC_URL,
+      accounts: [
+        PRIVATE_KEY,
+        PRIVATE_KEY_PROJECT_OWNER,
+        PRIVATE_KEY_PROJECT_ACCOUNT2,
+        PRIVATE_KEY_PROJECT_ACCOUNT3,
+      ],
+      chainId: 80001,
+      blockConfirmations: 6,
+    },
   },
   solidity: {
     version: "0.8.9",
@@ -62,7 +75,8 @@ module.exports = {
     currency: "USD",
     outputFile: "gas-report.txt",
     noColors: true,
-    // coinmarketcap: COINMARKETCAP_API_KEY,
+    coinmarketcap: COINMARKETCAP_API_KEY,
+    //token: "MATIC",
   },
   mocha: {
     timeout: 400000, // 400 seconds

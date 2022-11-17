@@ -14,8 +14,8 @@ contract GovernanceToken is ERC20Votes, Ownable {
     );
 
     constructor()
-        ERC20("GovernanceToken", "GT")
-        ERC20Permit("GovernanceToken")
+        ERC20("QuickfundDAOToken", "QFD")
+        ERC20Permit("QuickfundDAOToken")
     {
         _mint(msg.sender, s_initialSupply);
     }
