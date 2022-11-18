@@ -107,8 +107,8 @@ contract FundProject is Ownable, AutomationCompatibleInterface {
     function cancelApporovelFundingByDao(uint256 _projecID) external onlyOwner {
         // only dao can call it
         _isApporovedByDao[_projecID] = false;
-        _isFunding[projectId] = false;
-        _ProjectFundingStatus[projectId] = ProjectFundingStatus.CANCELED;
+        _isFunding[_projecID] = false;
+        _ProjectFundingStatus[_projecID] = ProjectFundingStatus.CANCELED;
     }
 
     function checkUpkeep(

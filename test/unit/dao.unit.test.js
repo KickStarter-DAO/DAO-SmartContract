@@ -50,9 +50,35 @@ const fs = require("fs");
         assert(timeLock.address);
       });
 
-      it("Only Dao can mint token", async () => {});
+      it("Only Owner can mint token", async () => {
+        // console.log((await gtToken.balanceOf(deployer)).toString());
 
-      it("can only be changed through governance", async () => {});
+        const tx = await gtToken.mintToken(
+          deployer,
+          ethers.BigNumber.from("1000000000000000000000000")
+        );
+        await tx.wait(1);
+
+        // console.log((await gtToken.balanceOf(deployer)).toString());
+
+        expect((await gtToken.balanceOf(deployer)).toString()).to.equal(
+          "2000000000000000000000000"
+        );
+        gtToken = await ethers.getContract("GovernanceToken", account1.address);
+
+        await expect(
+          gtToken.mintToken(
+            account1.address,
+            ethers.BigNumber.from("1000000000000000000000000")
+          )
+        ).to.be.revertedWith("Ownable: caller is not the owner");
+      });
+
+      it("can only be changed through governance", async () => {
+        await expect(
+          governor.apporoveFundingByDao("qwbsakjd00", 5, 5, 5)
+        ).to.be.revertedWith("Ownable: caller is not the owner");
+      });
 
       //--------------------------------------------------------------------------------
 
