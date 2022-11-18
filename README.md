@@ -1,4 +1,4 @@
-## DAO-SmartContract
+# Quickfund DAO(Decentralized Autonomous Organization)
 --------------------------
 ### [Box.sol](./contracts/Box.sol)
 
