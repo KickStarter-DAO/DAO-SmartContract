@@ -15,7 +15,7 @@ const fs = require("fs");
 
 !developmentChains.includes(network.name)
   ? describe.skip
-  : describe("FundProject Unit Tests 2 ", async () => {
+  : describe("cancelApporovelFundingByDao ", async () => {
       let gtToken,
         account1,
         account2,
